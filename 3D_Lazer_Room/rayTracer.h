@@ -71,9 +71,10 @@ float triangleAREA(vec3 a, vec3 b, vec3 c)
 	vec3 n = cross(ab, ac);
 	return(sqrt(n.x*n.x + n.y*n.y + n.z*n.z) / 2);
 }
-bool isINtriangle(Eplane p, vec3 i)
+int isINtriangle(Eplane p, vec3 i)
 {
 	float abc = triangleAREA(p.a, p.b, p.c);
+
 	float abp = triangleAREA(p.a, p.b, i);
 	float acp = triangleAREA(p.a, p.c, i);
 	float cbp = triangleAREA(p.c, p.b, i);
@@ -81,17 +82,34 @@ bool isINtriangle(Eplane p, vec3 i)
 
 	if (_abc > abc - .00001 && _abc < abc + .00001)
 	{
-		return true;
+		return 1;
 	}
+	//if (
+	//	(abp + acp > 0 && cbp < 0.01) ||
+	//	(abp + cbp > 0 && acp < 0.01) ||
+	//	(acp + cbp > 0 && abp < 0.01)
+	//	)
+	//{
+	//	return 2;
+	//}
+	//else if (
+	//	abp == 0 && acp == 0 ||
+	//	acp == 0 && cbp == 0 ||
+	//	abp == 0 && cbp == 0
+	//	)
+	//{
+	//	return 3;
+	//}
+
 	return false;
 }
 
-vec3 reflect(Eplane p, vec3 d)
+vec3 reflect(Eplane plane, vec3 direction)
 {
 	// I - 2.0 * dot(N, I) * N.
 
-	vec3 n = normalize(p.n);
-	return { d - vec3{2,2,2} *dot(n, d) * n };
+	vec3 normal = normalize(plane.n);
+	return { direction - vec3{2,2,2} * dot(normal, direction) * normal };
 }
 
 
@@ -102,13 +120,16 @@ Ray wanWAYray(vec3 Ta, vec3 Tb, vec3 Tc, vec3 La, vec3 Lb)
 	Eline l(La, Lb);
 
 	vec3 intersect = GETintersection(p, l);
-	vec3 direction = reflect(p, intersect) + intersect;
+	vec3 direction = reflect(p, l.t);
 
-	if (isINtriangle(p, intersect))
+	int result = isINtriangle(p, intersect);
+
+	if (result)
 	{
 		vec3 _a{ normalize(La - Lb) };
 		vec3 _b{ normalize(La - intersect) };
-		if (
+		if // intersection is in the same direction as the ray
+			( 
 			_a.x < _b.x + 0.1 &&
 			_a.x > _b.x - 0.1 &&
 			_a.y < _b.y + 0.1 &&
@@ -117,9 +138,20 @@ Ray wanWAYray(vec3 Ta, vec3 Tb, vec3 Tc, vec3 La, vec3 Lb)
 			_a.z > _b.z - 0.1
 			)
 		{
-			return{ intersect, direction };
+			if (result == 1) {
+				return{ intersect, direction };
+			}
+			if (result == 2) {
+				//wxMessageBox("POOP 2");
+				return{ intersect, {.5,.1,.1} };
+			}
+			if (result == 3) {
+				//wxMessageBox("POOP 3");
+				return{ intersect, {.5,.1,.1} };
+			}
 		}
 	}
+	
 	return{ {0,0,0},{0,0,0} };
 
 }

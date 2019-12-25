@@ -2,6 +2,18 @@
 #include "Main.h"
 
 
+string str{ "" };
+void q(string _str) {
+	str += _str  + '\n';
+}
+void q(float _str) {
+	str += to_string(_str);
+	str += '\n';
+}
+void q(int _str) {
+	str += to_string(_str);
+	str += '\n';
+}
 
 bool App::OnInit()
 {
@@ -69,8 +81,8 @@ void Frame::OnExit(wxCommandEvent& event)
 
 GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 	: wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE),
-	//file("C:/danny/blender/testOBJ.obj"),
-	file("C:/danny/blender/untitled.obj"),
+	file("C:/danny/blender/testOBJ.obj"),
+	//file("C:/danny/blender/untitled.obj"),
 	//file("C:/danny/blender/poop.obj"),
 	frame(_frame),
 
@@ -90,7 +102,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	vec3 pa;
 	vec3 pb;
-	Ray r;
+	Ray ray;
 
 	// stuff
 	{
@@ -145,22 +157,30 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		}
 	}
 
+	int poop = 0;
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		for (auto i : faces)
 		{
-			r = wanWAYray(i.a, i.b, i.c, pa, pb);
-			if (r.intersect != vec3{ 0, 0, 0 }&& r.direction != vec3{ 0, 0, 0 })
+			ray = wanWAYray(i.a, i.b, i.c, pa, pb);
+			if (ray.intersect != vec3{ 0, 0, 0 } && ray.direction != vec3{ 0, 0, 0 })
 			{
-				drawLINE(pa, r.intersect, { 0,1,1 });
-				pa = r.intersect;
-				pb = r.direction;
+				float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+				float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+				float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
+				drawLINE(pa, ray.intersect, { r,g,b });
+				pa = ray.intersect;
+				pb = ray.intersect+ ray.direction;
+				
+				poop++;
 				break;
 			}
 		}
 	}
 	
+	q(poop);
 
 	// swap buffor, cleanup
 	{
@@ -169,7 +189,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 		GLerror();
 		delete context;
-
+		
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 		frame->freeTEXT->SetValue(std::to_string(elapsed_secs));
@@ -226,4 +246,21 @@ void GLcanvas::OnKeyDown(wxKeyEvent& event)
 
 }
 
-
+void GLcanvas::OnMouseWeel(wxMouseEvent& event)
+{
+	//wxMessageBox("POOP");
+	if (event.GetWheelRotation() > 0)
+	{
+		CscaleX += .1;
+		CscaleY += .1;
+		CscaleZ += .1;
+		Refresh();
+	}
+	else
+	{
+		CscaleX -= .1;
+		CscaleY -= .1;
+		CscaleZ -= .1;
+		Refresh();
+	}
+}

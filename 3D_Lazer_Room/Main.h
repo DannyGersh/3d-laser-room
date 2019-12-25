@@ -19,6 +19,8 @@
 #include <ctime>
 
 
+
+
 void GLerror()
 {
 	GLenum err = glGetError();
@@ -78,6 +80,7 @@ public:
 	GLcanvas(wxWindow *parent, Frame* frame, int *attribList = NULL);
 	void OnPaint(wxPaintEvent& event);
 	void OnKeyDown(wxKeyEvent& event);
+	void OnMouseWeel(wxMouseEvent& event);
 
 private:
 	Frame* frame;
@@ -85,7 +88,6 @@ private:
 
 	GLuint programID;
 	mat4 trans;
-	string str;
 	clock_t begin;
 
 	// C = camera, L = lazer
@@ -109,4 +111,5 @@ private:
 wxBEGIN_EVENT_TABLE(GLcanvas, wxGLCanvas)
 EVT_PAINT(GLcanvas::OnPaint)
 EVT_KEY_DOWN(GLcanvas::OnKeyDown)
-wxEND_EVENT_TABLE()
+EVT_MOUSEWHEEL(GLcanvas::OnMouseWeel)
+wxEND_EVENT_TABLE() 

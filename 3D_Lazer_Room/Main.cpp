@@ -66,7 +66,6 @@ void Frame::OnExit(wxCommandEvent& event)
 	Close(true);
 }
 
-//
 
 GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 	: wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE),
@@ -147,29 +146,21 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	}
 
 
-	for (auto i : faces)
+	for (int i = 0; i < 100; i++)
 	{
-		r = wanWAYray(i.a, i.b, i.c, pa, pb);
-		drawLINE(pa, r.intersect, { 0,1,0 });
-		if (r.intersect != vec3{ 0, 0, 0 }&& r.direction != vec3{ 0, 0, 0 })
+		for (auto i : faces)
 		{
-			pa = r.intersect;
-			pb = r.direction;
-			break;
+			r = wanWAYray(i.a, i.b, i.c, pa, pb);
+			if (r.intersect != vec3{ 0, 0, 0 }&& r.direction != vec3{ 0, 0, 0 })
+			{
+				drawLINE(pa, r.intersect, { 0,1,1 });
+				pa = r.intersect;
+				pb = r.direction;
+				break;
+			}
 		}
 	}
-	for (auto i : faces)
-	{
-		r = wanWAYray(i.a, i.b, i.c, pa, pb);
-		drawLINE(pa, r.intersect, { 1,0,0 });
-		if (r.intersect != vec3{ 0, 0, 0 }&& r.direction != vec3{ 0, 0, 0 })
-		{
-			pa = r.intersect;
-			pb = r.direction;
-			break;
-		}
-	}
-
+	
 
 	// swap buffor, cleanup
 	{

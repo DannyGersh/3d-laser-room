@@ -2,18 +2,7 @@
 #include "Main.h"
 
 
-string str{ "" };
-void q(string _str) {
-	str += _str  + '\n';
-}
-void q(float _str) {
-	str += to_string(_str);
-	str += '\n';
-}
-void q(int _str) {
-	str += to_string(_str);
-	str += '\n';
-}
+
 
 bool App::OnInit()
 {
@@ -102,6 +91,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	vec3 pa;
 	vec3 pb;
+	vec3 oldDirection{ 0,0,0 };
+
 	Ray ray;
 
 	// stuff
@@ -127,9 +118,9 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		// camera
 		{
 			mat4 camera(1);
-			scale(programID, camera, { CscaleX,CscaleY,CscaleZ });
-			rotate(programID, camera, CrotateX, { 0,1,0 });
-			rotate(programID, camera, CrotateY, { 1,0,0 });
+			scale(programID, camera, { CscaleX - 0.5,CscaleY - 0.5,CscaleZ - 0.5 });
+			rotate(programID, camera, CrotateX + 30, { 0,1,0 });
+			rotate(programID, camera, CrotateY + 30, { 1,0,0 });
 			trans *= camera;
 		}
 
@@ -158,24 +149,40 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	}
 
 	int poop = 0;
-
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 200; i++)
 	{
-		for (auto i : faces)
+		for (int f = 0; f < faces.size(); f++)
 		{
-			ray = wanWAYray(i.a, i.b, i.c, pa, pb);
-			if (ray.intersect != vec3{ 0, 0, 0 } && ray.direction != vec3{ 0, 0, 0 })
+			ray = wanWAYray(faces[f].a, faces[f].b, faces[f].c, pa, pb);
+
+			if (ray.state == Ray::_INtriangle)
 			{
+				//q("IN");
 				float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 				float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 				float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 
-				drawLINE(pa, ray.intersect, { r,g,b });
+				drawLINE(pa, ray.intersect, { r,g,b }, { g,r,b });
 				pa = ray.intersect;
-				pb = ray.intersect+ ray.direction;
+				pb = ray.intersect + ray.direction;
 				
+				oldDirection = ray.direction;
 				poop++;
 				break;
+			}
+			else if (ray.state == Ray::_Onedge || ray.state == Ray::_Onvertex)
+			{
+				q("EDGE");
+				mat4 lazer(1);
+				vec4 pb4 = vtv(pb);
+				pb4 = pb4 * glm::rotate(lazer, float(radians(0.01f)), vec3{ 1,1,1 });
+				pb = vtv(pb4);
+				poop++;
+				f--;
+			}
+			else
+			{
+				//q("NOOO");
 			}
 		}
 	}
@@ -204,7 +211,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 void GLcanvas::OnKeyDown(wxKeyEvent& event)
 {
 	float Cspeed = 5;
-	float Lspeed = 5;
+	float Lspeed = .005;
 
 	switch (event.GetKeyCode())
 	{
@@ -251,16 +258,16 @@ void GLcanvas::OnMouseWeel(wxMouseEvent& event)
 	//wxMessageBox("POOP");
 	if (event.GetWheelRotation() > 0)
 	{
-		CscaleX += .1;
-		CscaleY += .1;
-		CscaleZ += .1;
+		CscaleX += .1f;
+		CscaleY += .1f;
+		CscaleZ += .1f;
 		Refresh();
 	}
 	else
 	{
-		CscaleX -= .1;
-		CscaleY -= .1;
-		CscaleZ -= .1;
+		CscaleX -= .1f;
+		CscaleY -= .1f;
+		CscaleZ -= .1f;
 		Refresh();
 	}
 }

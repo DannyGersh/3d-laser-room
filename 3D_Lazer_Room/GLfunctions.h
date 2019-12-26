@@ -21,7 +21,7 @@ void move(GLuint programID, glm::mat4& mat, glm::vec3 scale)
 }
 
 
-void drawLINE(glm::vec3 a, glm::vec3 b, glm::vec3 color)
+void drawLINE(vec3 a, vec3 b, vec3 color)
 {
 	struct data {
 		glm::vec3 a, color;
@@ -29,6 +29,43 @@ void drawLINE(glm::vec3 a, glm::vec3 b, glm::vec3 color)
 	data d[] = {
 		{a, color},
 		{b, color},
+	};
+
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(d), &d, GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glVertexAttribPointer(
+		0,							// axes shader variables at location 0
+		3,							// number of atrributes
+		GL_FLOAT,					// type
+		GL_FALSE,					// normalized?
+		sizeof(data),               // stride: total size of 1 triangle
+		(void*)0					// size of offset from start
+	);
+	glVertexAttribPointer(
+		1,
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(struct data),
+		(void*)(sizeof(data::a))
+	);
+	glDrawArrays(GL_LINES, 0, 3);
+}
+void drawLINE(vec3 a, vec3 b, vec3 color1, vec3 color2)
+{
+	struct data {
+		glm::vec3 a, color;
+	};
+	data d[] = {
+		{a, color1},
+		{b, color2},
 	};
 
 	GLuint buffer;

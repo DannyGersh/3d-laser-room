@@ -158,9 +158,11 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Debug.h" />
     <ClInclude Include="GLfunctions.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="OBJfile.h" />
+    <ClInclude Include="Primitives.h" />
     <ClInclude Include="rayTracer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

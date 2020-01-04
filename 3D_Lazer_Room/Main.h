@@ -19,6 +19,12 @@
 #include <ctime>
 
 
+float r, g, b;
+void rnd_colors() {
+	r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+	b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+}
 
 
 void GLerror()
@@ -92,15 +98,17 @@ private:
 
 	// C = camera, L = lazer
 	float CrotateX{ 0 }, CrotateY{ 0 }, CrotateZ{ 0 };
-	float LrotateX{ -10 }, LrotateY{ 0 }, LrotateZ{ 0 };
+	float LrotateX{ 0 }, LrotateY{ 0 }, LrotateZ{ 0 };
 	float CscaleX{ 1 }, CscaleY{ 1 }, CscaleZ{ 1 };
 
 private:
 	OBJfile file;
-	struct face {
-		glm::vec3 a, b, c;
-	};
-	std::vector<face> faces;
+	std::vector<Line> lll;
+
+	std::vector<Face> faces;
+	std::vector<edge> edges;
+
+	vector<Line> l;
 
 	wxDECLARE_EVENT_TABLE();
 };

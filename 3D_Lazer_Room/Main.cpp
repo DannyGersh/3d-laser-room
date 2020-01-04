@@ -2,8 +2,6 @@
 #include "Main.h"
 
 
-
-
 bool App::OnInit()
 {
 	Frame *frame = new Frame();
@@ -30,7 +28,7 @@ Frame::Frame()
 
 	// init ctrls
 	{
-		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
+		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(150,0), wxTE_MULTILINE);
 		textSIZER->Add(bigTEXT, 1, 1);
 		bigTEXT->SetBackgroundColour({ 200,200,200 });
 
@@ -70,30 +68,56 @@ void Frame::OnExit(wxCommandEvent& event)
 
 GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 	: wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE),
-	file("C:/danny/blender/testOBJ.obj"),
+	//file("C:/danny/blender/testOBJ.obj"),
 	//file("C:/danny/blender/untitled.obj"),
-	//file("C:/danny/blender/poop.obj"),
+	file("C:/danny/blender/box.obj"),
 	frame(_frame),
 
 	trans(1)
 {
 	for (int i = 0; i < file.indices.size(); i += 3)
 	{
-		face face;
-		face.a = file.vertices[file.indices[i + 0]];
-		face.b = file.vertices[file.indices[i + 1]];
-		face.c = file.vertices[file.indices[i + 2]];
+		Face face;
+		face.p[0] = file.vertices[file.indices[i + 0]];
+		face.p[1] = file.vertices[file.indices[i + 1]];
+		face.p[2] = file.vertices[file.indices[i + 2]];
+		face.l[0] = Line{ face.p[0],face.p[1], (face.p[0] - face.p[1]) };
+		face.l[1] = Line{ face.p[0],face.p[2], (face.p[0] - face.p[2]) };
+		face.l[2] = Line{ face.p[1],face.p[2], (face.p[1] - face.p[2]) };
+		face.n = cross(face.p[1] - face.p[0], face.p[2] - face.p[0]);
+		// face.n = { -face.n.x,-face.n.y,-face.n.z };
+		face.init_Equation();
+
 		faces.push_back(face);
 	}
+		
+
+	for (auto& f: faces) {
+		for (auto& ff : faces) {
+			if (f != ff) 
+			{
+				for (int l = 0; l < 3; l++) {
+					for (int ll = 0; ll < 3; ll++) 
+					{
+						if (f.l[l] == ff.l[ll]) {
+							f.e.push_back({ { &f,&ff }, f.l[l], f.n + ff.n });
+						}
+					}
+				}
+			}
+		}
+	}
+
 }
 
 void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
 	vec3 pa;
 	vec3 pb;
-	vec3 oldDirection{ 0,0,0 };
-
-	Ray ray;
+	vec3 intersect;
+	Face face;
+	float l = MAX;
+	int last = Ray::_INtriangle;
 
 	// stuff
 	{
@@ -127,11 +151,10 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		// line rotation
 		{
 			mat4 lazer(1);
-			vec4 pa4{ 0,0,0,0 }, pb4{ -5,0,0,0 };
+			vec4 pa4{ 0,0,0,0 }, pb4{ .5,.5,0,0 };
 			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateX)), vec3{ 0,0,1 });
 			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateY)), vec3{ 0,1,0 });
 			pa = vtv(pa4); pb = vtv(pb4);
-
 		}
 
 		// draw the scene
@@ -145,49 +168,62 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 				GL_UNSIGNED_INT,
 				(void*)0
 			);
+
+			//edge e = edges[7];
+			//drawTriangle(e.face[0]->p[0], e.face[0]->p[1], e.face[0]->p[2], { 1,0,0,1 });
+			//drawTriangle(e.face[1]->p[0], e.face[1]->p[1], e.face[1]->p[2], { 0,1,0,1 });
+			//drawTriangle(e.line.a, e.line.b, { 0,0,0 }, { 0,0,1,1 });
 		}
 	}
 
-	int poop = 0;
-	for (int i = 0; i < 200; i++)
-	{
-		for (int f = 0; f < faces.size(); f++)
+	for (auto f : faces) {
+		vec3 _intersect = GETintersection(f.eplane, Eline{ pa, pb });
+		if (sameDir(pb-pa, _intersect-pa)) 
 		{
-			ray = wanWAYray(faces[f].a, faces[f].b, faces[f].c, pa, pb);
-
-			if (ray.state == Ray::_INtriangle)
-			{
-				//q("IN");
-				float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-				float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-				float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-
-				drawLINE(pa, ray.intersect, { r,g,b }, { g,r,b });
-				pa = ray.intersect;
-				pb = ray.intersect + ray.direction;
-				
-				oldDirection = ray.direction;
-				poop++;
-				break;
+			int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
+			if (r != Ray::_NOintersection) {
+				float ll = length(pa - _intersect);
+				if (ll < l) { l = ll; intersect = _intersect; face = f; }
+				last = Ray::_INtriangle;
 			}
-			else if (ray.state == Ray::_Onedge || ray.state == Ray::_Onvertex)
-			{
-				q("EDGE");
-				mat4 lazer(1);
-				vec4 pb4 = vtv(pb);
-				pb4 = pb4 * glm::rotate(lazer, float(radians(0.01f)), vec3{ 1,1,1 });
-				pb = vtv(pb4);
-				poop++;
-				f--;
-			}
-			else
-			{
-				//q("NOOO");
+			if (r == Ray::_Onedge) {
+				float ll = length(pa - _intersect);
+				if (ll < l) { l = ll; intersect = _intersect; }
+				last = Ray::_Onedge;
 			}
 		}
 	}
+	//if (last == Ray::_Onedge) {
+	//	qq("AA");
+	//}
+	//drawLINE(pa, pb, Cr);
+	//drawLINE(pa, intersect, C());
+	//drawLINE(face.p[0], intersect, Cr);
+	//drawLINE(face.p[1], intersect, Cr);
+	//drawLINE(face.p[2], intersect, Cr);
+
+	drawLINE2(pa, intersect, Cr);
+	if (last == Ray::_Onedge) {
+		qq("_Onedge");
 	
-	q(poop);
+		vec3 n[2];
+		for (int i = 0; i < 3; i++) {
+			if (face.e[i].l.isONline(intersect)) {
+				n[0] = face.e[i].face[0]->n;
+				n[1] = face.e[i].face[1]->n;
+				drawTriangle(*face.e[i].face[0], C1);
+				drawTriangle(*face.e[i].face[1], C1);
+			}
+		}
+		
+		pb = intersect + reflect(n[0] + n[1], intersect - pa);
+		pa = intersect;
+	}
+	if (last == Ray::_INtriangle) {
+		pb = intersect + reflect(face.n, intersect-pa);
+		pa = intersect;
+	}
+	drawLINE(pa, pb, Cg);
 
 	// swap buffor, cleanup
 	{
@@ -211,7 +247,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 void GLcanvas::OnKeyDown(wxKeyEvent& event)
 {
 	float Cspeed = 5;
-	float Lspeed = .005;
+	float Lspeed = 5;
 
 	switch (event.GetKeyCode())
 	{

@@ -26,9 +26,9 @@ struct OBJfile
 
 	}
 
-	glm::vec2 objlVECtoGLMvec(objl::Vector2 cev)
+	glm::vec2 objlVECtoGLMvec(objl::Vector2 vec)
 	{
-		return { cev.X,cev.Y };
+		return { vec.X,vec.Y };
 	}
 	glm::vec3 objlVECtoGLMvec(objl::Vector3 vec)
 	{
@@ -57,7 +57,7 @@ void initOBJfile(OBJfile& file)
 			(void*)0					// size of offset from start
 		);
 
-		float r = 0, g = .3, b = 0;
+		float r = 0.0f, g = 0.3f, b = 0.0f;
 		float colors[] = {
 			g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,
 		};

@@ -71,8 +71,7 @@ GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 	//file("C:/danny/blender/testOBJ.obj"),
 	//file("C:/danny/blender/untitled.obj"),
 	file("C:/danny/blender/box.obj"),
-	frame(_frame),
-
+	frame(_frame), 
 	trans(1)
 {
 	for (int i = 0; i < file.indices.size(); i += 3)
@@ -90,7 +89,6 @@ GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 
 		faces.push_back(face);
 	}
-		
 
 	for (auto& f: faces) {
 		for (auto& ff : faces) {
@@ -117,6 +115,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	vec3 intersect;
 	Face face;
 	int last = Ray::_INtriangle;
+	int count{ 0 };
 
 	// stuff
 	{
@@ -141,9 +140,16 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		// camera
 		{
 			mat4 camera(1);
-			scale(programID, camera, { CscaleX - 0.5,CscaleY - 0.5,CscaleZ - 0.5 });
-			rotate(programID, camera, CrotateX + 30, { 0,1,0 });
-			rotate(programID, camera, CrotateY + 30, { 1,0,0 });
+			wxSize screenSIZE = this->GetSize();
+			float sx = screenSIZE.x, sy = screenSIZE.y;
+
+			float x = CscaleX + .5, y = CscaleY + .5, z = CscaleZ + .5;
+			float r = sx / sy;
+			x = x / r;
+
+			scale(programID, camera, { x, y, z });
+			rotate(programID, camera, CrotateX, { 0,1,0 });
+			rotate(programID, camera, CrotateY, { 1,0,0 });
 			trans *= camera;
 		}
 
@@ -175,52 +181,54 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		}
 	}
 
-	int count{ 0 };
-	for (int t = 0; t < 100; t++) {
-		float l = MAX;
-		for (auto f : faces) {
+	// ray tracer
+	{
+		for (int t = 0; t < 100; t++) {
+			float l = MAX;
+			for (auto f : faces) {
 
-			vec3 _intersect = GETintersection(f.eplane, Eline{ pa, pb });
+				vec3 _intersect = GETintersection(f.eplane, Eline{ pa, pb });
 
-			if (sameDir(pa - pb, pa - _intersect))
-			{
-				int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
-				if (r != Ray::_NOintersection) {
-					float ll = length(pa - _intersect);
-					if (ll < l) { l = ll; intersect = _intersect; face = f; }
-					last = Ray::_INtriangle;
-				}
-				if (r == Ray::_Onedge) {
-					float ll = length(pa - _intersect);
-					if (ll < l) { l = ll; intersect = _intersect; }
-					last = Ray::_Onedge;
-				}
-			}
-		}
-
-		drawLINE2(pa, intersect, Cr);
-		if (last == Ray::_Onedge) {
-			count++;
-
-			vec3 n[2];
-			for (int i = 0; i < 3; i++) {
-				if (face.e[i].l.isONline(intersect)) {
-					n[0] = face.e[i].face[0]->n;
-					n[1] = face.e[i].face[1]->n;
+				if (sameDir(pa - pb, pa - _intersect))
+				{
+					int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
+					if (r != Ray::_NOintersection) {
+						float ll = length(pa - _intersect);
+						if (ll < l) { l = ll; intersect = _intersect; face = f; }
+						last = Ray::_INtriangle;
+					}
+					if (r == Ray::_Onedge) {
+						float ll = length(pa - _intersect);
+						if (ll < l) { l = ll; intersect = _intersect; }
+						last = Ray::_Onedge;
+					}
 				}
 			}
-			vec3 direction = reflect(n[0] + n[1], intersect - pa);
-			pb = intersect + direction;
-			pa = intersect;
+
+			drawLINE2(pa, intersect, Cr);
+			if (last == Ray::_Onedge) {
+				count++;
+
+				vec3 n[2];
+				for (int i = 0; i < 3; i++) {
+					if (face.e[i].l.isONline(intersect)) {
+						n[0] = face.e[i].face[0]->n;
+						n[1] = face.e[i].face[1]->n;
+					}
+				}
+				vec3 direction = reflect(n[0] + n[1], intersect - pa);
+				pb = intersect + direction;
+				pa = intersect;
+			}
+			if (last == Ray::_INtriangle) {
+				count++;
+				vec3 direction = reflect(face.n, intersect - pa);
+				pb = intersect + direction;
+				pa = intersect;
+			}
 		}
-		if (last == Ray::_INtriangle) {
-			count++;
-			vec3 direction = reflect(face.n, intersect - pa);
-			pb = intersect + direction;
-			pa = intersect;
-		}
+		qq(count);
 	}
-	qq(count);
 
 	// swap buffor, cleanup
 	{
@@ -237,8 +245,6 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		str = "";
 	}
 }
-
-
 
 
 void GLcanvas::OnKeyDown(wxKeyEvent& event)

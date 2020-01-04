@@ -116,7 +116,6 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	vec3 pb;
 	vec3 intersect;
 	Face face;
-	float l = MAX;
 	int last = Ray::_INtriangle;
 
 	// stuff
@@ -176,54 +175,52 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		}
 	}
 
-	for (auto f : faces) {
-		vec3 _intersect = GETintersection(f.eplane, Eline{ pa, pb });
-		if (sameDir(pb-pa, _intersect-pa)) 
-		{
-			int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
-			if (r != Ray::_NOintersection) {
-				float ll = length(pa - _intersect);
-				if (ll < l) { l = ll; intersect = _intersect; face = f; }
-				last = Ray::_INtriangle;
-			}
-			if (r == Ray::_Onedge) {
-				float ll = length(pa - _intersect);
-				if (ll < l) { l = ll; intersect = _intersect; }
-				last = Ray::_Onedge;
-			}
-		}
-	}
-	//if (last == Ray::_Onedge) {
-	//	qq("AA");
-	//}
-	//drawLINE(pa, pb, Cr);
-	//drawLINE(pa, intersect, C());
-	//drawLINE(face.p[0], intersect, Cr);
-	//drawLINE(face.p[1], intersect, Cr);
-	//drawLINE(face.p[2], intersect, Cr);
+	int count{ 0 };
+	for (int t = 0; t < 100; t++) {
+		float l = MAX;
+		for (auto f : faces) {
 
-	drawLINE2(pa, intersect, Cr);
-	if (last == Ray::_Onedge) {
-		qq("_Onedge");
-	
-		vec3 n[2];
-		for (int i = 0; i < 3; i++) {
-			if (face.e[i].l.isONline(intersect)) {
-				n[0] = face.e[i].face[0]->n;
-				n[1] = face.e[i].face[1]->n;
-				drawTriangle(*face.e[i].face[0], C1);
-				drawTriangle(*face.e[i].face[1], C1);
+			vec3 _intersect = GETintersection(f.eplane, Eline{ pa, pb });
+
+			if (sameDir(pa - pb, pa - _intersect))
+			{
+				int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
+				if (r != Ray::_NOintersection) {
+					float ll = length(pa - _intersect);
+					if (ll < l) { l = ll; intersect = _intersect; face = f; }
+					last = Ray::_INtriangle;
+				}
+				if (r == Ray::_Onedge) {
+					float ll = length(pa - _intersect);
+					if (ll < l) { l = ll; intersect = _intersect; }
+					last = Ray::_Onedge;
+				}
 			}
 		}
-		
-		pb = intersect + reflect(n[0] + n[1], intersect - pa);
-		pa = intersect;
+
+		drawLINE2(pa, intersect, Cr);
+		if (last == Ray::_Onedge) {
+			count++;
+
+			vec3 n[2];
+			for (int i = 0; i < 3; i++) {
+				if (face.e[i].l.isONline(intersect)) {
+					n[0] = face.e[i].face[0]->n;
+					n[1] = face.e[i].face[1]->n;
+				}
+			}
+			vec3 direction = reflect(n[0] + n[1], intersect - pa);
+			pb = intersect + direction;
+			pa = intersect;
+		}
+		if (last == Ray::_INtriangle) {
+			count++;
+			vec3 direction = reflect(face.n, intersect - pa);
+			pb = intersect + direction;
+			pa = intersect;
+		}
 	}
-	if (last == Ray::_INtriangle) {
-		pb = intersect + reflect(face.n, intersect-pa);
-		pa = intersect;
-	}
-	drawLINE(pa, pb, Cg);
+	qq(count);
 
 	// swap buffor, cleanup
 	{
@@ -247,7 +244,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 void GLcanvas::OnKeyDown(wxKeyEvent& event)
 {
 	float Cspeed = 5;
-	float Lspeed = 5;
+	float Lspeed = .05;
 
 	switch (event.GetKeyCode())
 	{

@@ -126,6 +126,7 @@ public:
 	std::vector<Face> faces;
 
 	vec4 Lcolour{ 1,0,0,1 };
+	vec4 Mcolour{ .3,.1,1,.5 };
 
 	wxDECLARE_EVENT_TABLE();
 };

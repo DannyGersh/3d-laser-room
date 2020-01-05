@@ -48,12 +48,12 @@ Frame::Frame()
 		// mesh colorPick
 		{
 			meshCOLOUR = new wxColourPickerCtrl(this, ID_MESH_COLOUR);
-			meshCOLOUR->SetColour(wxColour(canvas->Lcolour.x * 255, 0, 0));
+			meshCOLOUR->SetColour(wxColour(canvas->Mcolour.x * 255, canvas->Mcolour.y * 255, canvas->Mcolour.z * 255));
 			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Mesh colour:"));
 			GUIsizer->Add(meshCOLOUR);
 			GUIsizer->AddSpacer(10);
 
-			meshSlider = new wxSlider(this, ID_MESH_SLIDER, 255, 0, 255);
+			meshSlider = new wxSlider(this, ID_MESH_SLIDER, 255/2, 0, 255);
 			GUIsizer->Add(meshSlider);
 			GUIsizer->AddSpacer(10);
 
@@ -131,7 +131,6 @@ void Frame::OnExit(wxCommandEvent& event)
 	SetMinSize({ 400, 400 });
 	Close(true);
 }
-
 void Frame::ONlaserCOLOUR(wxColourPickerEvent& event)
 {
 	wxColour c = laserCOLOUR->GetColour();
@@ -141,17 +140,15 @@ void Frame::ONlaserCOLOUR(wxColourPickerEvent& event)
 	this->canvas->Lcolour = vec4{ r,g,b,canvas->Lcolour.w };
 	canvas->Refresh();
 }
-
 void Frame::ONmeshCOLOUR(wxColourPickerEvent& event)
 {
 	wxColour c = meshCOLOUR->GetColour();
 	float r = (float)c.Red() / 255;
 	float g = (float)c.Green() / 255;
 	float b = (float)c.Blue() / 255;
-	//this->canvas->Lcolour = vec4{ r,g,b,1 };
+	this->canvas->Mcolour = vec4{ r,g,b,canvas->Mcolour.w };
 	canvas->Refresh();
 }
-
 void Frame::ONlaserSlider(wxScrollEvent& event)
 {
 	canvas->Lcolour.w = (float)laserSlider->GetValue() / 255;
@@ -159,7 +156,8 @@ void Frame::ONlaserSlider(wxScrollEvent& event)
 }
 void Frame::ONmeshSlider(wxScrollEvent& event)
 {
-	wxMessageBox("A");
+	canvas->Mcolour.w = (float)meshSlider->GetValue() / 255;
+	canvas->Refresh();
 }
 
 
@@ -265,7 +263,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		{
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-			initOBJfile(file);
+			initOBJfile(file, Mcolour);
 			glDrawElements(
 				GL_TRIANGLES,
 				file.indices.size(),
@@ -282,7 +280,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	// ray tracer
 	{
-		for (int t = 0; t < 2; t++) {
+		for (int t = 0; t < 200; t++) {
 			float l = MAX;
 			for (auto f : faces) {
 
@@ -329,7 +327,6 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			}
 		}
 		qq(count);
-
 
 	}
 
@@ -394,7 +391,6 @@ void GLcanvas::OnKeyDown(wxKeyEvent& event)
 	Refresh(false);
 
 }
-
 void GLcanvas::OnMouseWeel(wxMouseEvent& event)
 {
 	//wxMessageBox("POOP");

@@ -37,7 +37,7 @@ struct OBJfile
 
 };
 
-void initOBJfile(OBJfile& file)
+void initOBJfile(OBJfile& file, glm::vec4 color)
 {
 	// vertex buffer
 	{
@@ -57,23 +57,22 @@ void initOBJfile(OBJfile& file)
 			(void*)0					// size of offset from start
 		);
 
-		float r = 0.0f, g = 0.3f, b = 0.0f;
-		float colors[] = {
-			g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,g,0,0,g,g,0,0,g,g,0,g,0,g,0,g,0,0,g,
-		};
+		std::vector<glm::vec4> colors(file.vertices.size());
+		std::fill(colors.begin(), colors.end(), color);
+
 		GLuint buffer2;
 		glGenBuffers(1, &buffer2);
 		glBindBuffer(GL_ARRAY_BUFFER, buffer2);
-		glBufferData(GL_ARRAY_BUFFER, file.indices.size() * sizeof(glm::vec3), &colors[0], GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, file.indices.size() * sizeof(glm::vec4), &colors[0], GL_STATIC_DRAW);
 		glBindBuffer(GL_ARRAY_BUFFER, buffer2);
 
 		glEnableVertexAttribArray(1); // color
 		glVertexAttribPointer(
 			1,
-			3,
+			4,
 			GL_FLOAT,
 			GL_FALSE,
-			sizeof(float) * 3,
+			sizeof(float) * 4,
 			(void*)0
 		);
 	}

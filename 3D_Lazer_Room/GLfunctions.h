@@ -11,7 +11,6 @@ vec3 rotate(vec3 p, vec3 degree)
 	p4 = p4 * glm::rotate(lazer, float(radians(degree.z)), vec3{ 0,0,1 });
 	return vtv(p4);
 }
-
 void rotate(GLuint programID, glm::mat4& mat, float degree, glm::vec3 axis)
 {
 	mat = glm::rotate(mat, glm::radians(degree), axis); // rotate 
@@ -30,7 +29,6 @@ void move(GLuint programID, glm::mat4& mat, glm::vec3 scale)
 	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
 	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
 }
-
 
 
 void drawLINE(vec3 a, vec3 b, vec4 color)
@@ -269,6 +267,8 @@ void drawTriangle(Face f, vec4 color)
 	);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
+
+
 
 GLuint LoadShaders(const char * vertex_file_path, const char * fragment_file_path) {
 

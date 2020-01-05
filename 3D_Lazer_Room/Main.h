@@ -7,6 +7,7 @@
 
 #include "GL/glew.h"
 #include "wx/glcanvas.h"
+#include "wx/clrpicker.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -18,6 +19,7 @@
 #include "GLfunctions.h"
 #include <ctime>
 
+class GLcanvas;
 
 float r, g, b;
 void rnd_colors() {
@@ -25,7 +27,6 @@ void rnd_colors() {
 	g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 	b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 }
-
 
 void GLerror()
 {
@@ -65,15 +66,20 @@ class Frame : public wxFrame
 {
 public:
 	Frame();
-	wxGLCanvas* canvas;
+	GLcanvas* canvas;
 	wxGLContext* context;
 	wxTextCtrl* GLversion;
 	wxTextCtrl* freeTEXT;
 	std::vector<wxTextCtrl*> textCTRLS;
 	wxTextCtrl* bigTEXT;
 
+	wxColourPickerCtrl* laserCOLOUR;
+	wxColourPickerCtrl* laserCOLOUR2;
+
 private:
 	void OnExit(wxCommandEvent& event);
+	void laserCOLORpicked(wxColourPickerEvent& event);
+
 };
 
 wxIMPLEMENT_APP(App);
@@ -101,14 +107,11 @@ private:
 	float LrotateX{ 0 }, LrotateY{ 0 }, LrotateZ{ 0 };
 	float CscaleX{ .5 }, CscaleY{ .5 }, CscaleZ{ .5 };
 
-private:
+public:
 	OBJfile file;
-	std::vector<Line> lll;
-
 	std::vector<Face> faces;
-	std::vector<edge> edges;
 
-	vector<Line> l;
+	vec3 Lcolour{ 1,0,0 };
 
 	wxDECLARE_EVENT_TABLE();
 };

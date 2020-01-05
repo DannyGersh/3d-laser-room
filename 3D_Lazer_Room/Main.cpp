@@ -14,8 +14,8 @@ Frame::Frame()
 {
 	wxBoxSizer* mainSIZER = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* statusSIZER = new wxBoxSizer(wxHORIZONTAL);
-	wxBoxSizer* canvas_textSIZER = new wxBoxSizer(wxHORIZONTAL);
-	wxBoxSizer* textSIZER = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* canvas_GUIsizer = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* GUIsizer = new wxBoxSizer(wxVERTICAL);
 
 	// gl stuff
 	{
@@ -28,8 +28,15 @@ Frame::Frame()
 
 	// init ctrls
 	{
+		laserCOLOUR = new wxColourPickerCtrl(this, wxID_ANY);
+		laserCOLOUR->SetColour(wxColour( canvas->Lcolour.x*255, 0, 0));
+		Bind(wxEVT_COLOURPICKER_CHANGED, &Frame::laserCOLORpicked, this, wxID_ANY);
+		GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Lazer colour:"));
+		GUIsizer->Add(laserCOLOUR);
+		GUIsizer->AddSpacer(10);
+
 		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(150,0), wxTE_MULTILINE);
-		textSIZER->Add(bigTEXT, 1, 1);
+		GUIsizer->Add(bigTEXT, 1, 1);
 		bigTEXT->SetBackgroundColour({ 200,200,200 });
 
 		GLversion = new wxTextCtrl(this, 0, glGetString(GL_VERSION));
@@ -42,13 +49,13 @@ Frame::Frame()
 
 	// init sizers
 	{
-		canvas_textSIZER->Add(canvas, 1, wxEXPAND);
-		canvas_textSIZER->Add(textSIZER, 0, wxEXPAND);
+		canvas_GUIsizer->Add(canvas, 1, wxEXPAND);
+		canvas_GUIsizer->Add(GUIsizer, 0, wxEXPAND);
 
 		statusSIZER->Add(GLversion);
 		statusSIZER->Add(freeTEXT, 1, wxEXPAND);
 
-		mainSIZER->Add(canvas_textSIZER, 1, wxEXPAND);
+		mainSIZER->Add(canvas_GUIsizer, 1, wxEXPAND);
 		mainSIZER->Add(statusSIZER, 0, wxEXPAND);
 
 		SetSizerAndFit(mainSIZER);
@@ -65,12 +72,21 @@ void Frame::OnExit(wxCommandEvent& event)
 	Close(true);
 }
 
+void Frame::laserCOLORpicked(wxColourPickerEvent& event)
+{
+	wxColour c = laserCOLOUR->GetColour();
+	float r = (float)c.Red() / 255;
+	float g = (float)c.Green() / 255;
+	float b = (float)c.Blue() / 255;
+	this->canvas->Lcolour = vec3{ r,g,b };
+	canvas->Refresh();
+}
+
+
 
 GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 	: wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE),
-	//file("C:/danny/blender/testOBJ.obj"),
-	//file("C:/danny/blender/untitled.obj"),
-	file("C:/danny/blender/box.obj"),
+	file("box.obj"),
 	frame(_frame), 
 	trans(1)
 {
@@ -132,6 +148,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			glEnable(GL_BLEND); glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			glEnable(GL_DEPTH_TEST); glDepthFunc(GL_LESS);
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // wire frame
+			glEnable(GL_LINE_SMOOTH);
+			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
 			programID = LoadShaders("shaders/vertex.shader", "shaders/fragment.shader");
 			glUseProgram(programID);
@@ -143,20 +161,19 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			wxSize screenSIZE = this->GetSize();
 			float sx = screenSIZE.x, sy = screenSIZE.y;
 
-			float x = CscaleX + .5, y = CscaleY + .5, z = CscaleZ + .5;
+			float x = CscaleX + .09, y = CscaleY + .09, z = CscaleZ + .09;
 			float r = sx / sy;
 			x = x / r;
 
 			scale(programID, camera, { x, y, z });
-			rotate(programID, camera, CrotateX, { 0,1,0 });
-			rotate(programID, camera, CrotateY, { 1,0,0 });
-			trans *= camera;
+			rotate(programID, camera, CrotateX + 30, { 0,1,0 });
+			rotate(programID, camera, CrotateY + 30, { 1,0,0 });
 		}
 
-		// line rotation
+		// lazer
 		{
 			mat4 lazer(1);
-			vec4 pa4{ 0,0,0,0 }, pb4{ .5,.5,0,0 };
+			vec4 pa4{ 0,0,0,0 }, pb4{ .5,0,0,0 };
 			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateX)), vec3{ 0,0,1 });
 			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateY)), vec3{ 0,1,0 });
 			pa = vtv(pa4); pb = vtv(pb4);
@@ -183,7 +200,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	// ray tracer
 	{
-		for (int t = 0; t < 100; t++) {
+		for (int t = 0; t < 300; t++) {
 			float l = MAX;
 			for (auto f : faces) {
 
@@ -205,7 +222,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 				}
 			}
 
-			drawLINE2(pa, intersect, Cr);
+			drawLINE2(pa, intersect, Lcolour);
 			if (last == Ray::_Onedge) {
 				count++;
 
@@ -249,8 +266,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 void GLcanvas::OnKeyDown(wxKeyEvent& event)
 {
-	float Cspeed = 5;
-	float Lspeed = .05;
+	float Cspeed = 5.0f;
+	float Lspeed = .05f;
 
 	switch (event.GetKeyCode())
 	{
@@ -310,3 +327,4 @@ void GLcanvas::OnMouseWeel(wxMouseEvent& event)
 		Refresh();
 	}
 }
+

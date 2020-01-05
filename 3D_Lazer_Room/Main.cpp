@@ -28,12 +28,72 @@ Frame::Frame()
 
 	// init ctrls
 	{
-		laserCOLOUR = new wxColourPickerCtrl(this, wxID_ANY);
-		laserCOLOUR->SetColour(wxColour( canvas->Lcolour.x*255, 0, 0));
-		Bind(wxEVT_COLOURPICKER_CHANGED, &Frame::laserCOLORpicked, this, wxID_ANY);
-		GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Lazer colour:"));
-		GUIsizer->Add(laserCOLOUR);
-		GUIsizer->AddSpacer(10);
+		// lazer colorPick
+		{
+			GUIsizer->AddSpacer(10);
+			laserCOLOUR = new wxColourPickerCtrl(this, ID_LASER_COLOUR);
+			laserCOLOUR->SetColour(wxColour(canvas->Lcolour.x * 255, 0, 0));
+			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Lazer colour:"));
+			GUIsizer->Add(laserCOLOUR);
+			GUIsizer->AddSpacer(10);
+			
+			laserSlider = new wxSlider(this, ID_LASER_SLIDER, 255, 0, 255);
+			GUIsizer->Add(laserSlider);
+			GUIsizer->AddSpacer(10);
+
+			Bind(wxEVT_COLOURPICKER_CHANGED, &Frame::ONlaserCOLOUR, this, ID_LASER_COLOUR);
+			Bind(wxEVT_SCROLL_THUMBTRACK, &Frame::ONlaserSlider, this, ID_LASER_SLIDER);
+		}
+
+		// mesh colorPick
+		{
+			meshCOLOUR = new wxColourPickerCtrl(this, ID_MESH_COLOUR);
+			meshCOLOUR->SetColour(wxColour(canvas->Lcolour.x * 255, 0, 0));
+			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Mesh colour:"));
+			GUIsizer->Add(meshCOLOUR);
+			GUIsizer->AddSpacer(10);
+
+			meshSlider = new wxSlider(this, ID_MESH_SLIDER, 255, 0, 255);
+			GUIsizer->Add(meshSlider);
+			GUIsizer->AddSpacer(10);
+
+			Bind(wxEVT_COLOURPICKER_CHANGED, &Frame::ONmeshCOLOUR, this, ID_MESH_COLOUR);
+			Bind(wxEVT_SCROLL_THUMBTRACK, &Frame::ONmeshSlider, this, ID_MESH_SLIDER);
+		}
+
+		// lazer rotation
+		{
+			wxBoxSizer* s[3] = {
+				new wxBoxSizer(wxHORIZONTAL),
+				new wxBoxSizer(wxHORIZONTAL),
+				new wxBoxSizer(wxHORIZONTAL)
+			};
+			Lrotation[0] = new wxTextCtrl(this, wxID_ANY, "0", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+			Lrotation[1] = new wxTextCtrl(this, wxID_ANY, "0", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+			Lrotation[2] = new wxTextCtrl(this, wxID_ANY, "0", wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+			s[0]->Add(Lrotation[0]); s[0]->AddSpacer(10); s[0]->Add(new wxStaticText(this, wxID_ANY, "x"));
+			s[1]->Add(Lrotation[1]); s[1]->AddSpacer(10); s[1]->Add(new wxStaticText(this, wxID_ANY, "y"));
+			s[2]->Add(Lrotation[2]); s[2]->AddSpacer(10); s[2]->Add(new wxStaticText(this, wxID_ANY, "z"));
+			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Lazer rotation:"));
+			GUIsizer->Add(s[0]);
+			GUIsizer->Add(s[1]);
+			GUIsizer->Add(s[2]);
+			GUIsizer->AddSpacer(10);
+		}
+
+		// speed and reflections
+		{
+			laserSPEED = new wxTextCtrl(this, wxID_ANY);
+			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "laser speed:"));
+			GUIsizer->Add(laserSPEED);
+			GUIsizer->AddSpacer(10);
+
+			reflections = new wxTextCtrl(this, wxID_ANY);
+			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Reflections:"));
+			GUIsizer->Add(reflections);
+			GUIsizer->AddSpacer(10);
+		}
+
 
 		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(150,0), wxTE_MULTILINE);
 		GUIsizer->Add(bigTEXT, 1, 1);
@@ -72,14 +132,34 @@ void Frame::OnExit(wxCommandEvent& event)
 	Close(true);
 }
 
-void Frame::laserCOLORpicked(wxColourPickerEvent& event)
+void Frame::ONlaserCOLOUR(wxColourPickerEvent& event)
 {
 	wxColour c = laserCOLOUR->GetColour();
 	float r = (float)c.Red() / 255;
 	float g = (float)c.Green() / 255;
 	float b = (float)c.Blue() / 255;
-	this->canvas->Lcolour = vec3{ r,g,b };
+	this->canvas->Lcolour = vec4{ r,g,b,canvas->Lcolour.w };
 	canvas->Refresh();
+}
+
+void Frame::ONmeshCOLOUR(wxColourPickerEvent& event)
+{
+	wxColour c = meshCOLOUR->GetColour();
+	float r = (float)c.Red() / 255;
+	float g = (float)c.Green() / 255;
+	float b = (float)c.Blue() / 255;
+	//this->canvas->Lcolour = vec4{ r,g,b,1 };
+	canvas->Refresh();
+}
+
+void Frame::ONlaserSlider(wxScrollEvent& event)
+{
+	canvas->Lcolour.w = (float)laserSlider->GetValue() / 255;
+	canvas->Refresh();
+}
+void Frame::ONmeshSlider(wxScrollEvent& event)
+{
+	wxMessageBox("A");
 }
 
 
@@ -132,6 +212,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	Face face;
 	int last = Ray::_INtriangle;
 	int count{ 0 };
+
+	//vector<vec3> lines{ pa };
 
 	// stuff
 	{
@@ -200,7 +282,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	// ray tracer
 	{
-		for (int t = 0; t < 300; t++) {
+		for (int t = 0; t < 2; t++) {
 			float l = MAX;
 			for (auto f : faces) {
 
@@ -223,6 +305,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			}
 
 			drawLINE2(pa, intersect, Lcolour);
+			//lines.push_back(intersect);
+
 			if (last == Ray::_Onedge) {
 				count++;
 
@@ -245,6 +329,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			}
 		}
 		qq(count);
+
+
 	}
 
 	// swap buffor, cleanup

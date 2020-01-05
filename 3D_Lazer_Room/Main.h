@@ -1,23 +1,28 @@
 #pragma once
-#include <wx/wx.h>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <vector>
 
+#include <wx/wx.h>
 #include "GL/glew.h"
 #include "wx/glcanvas.h"
 #include "wx/clrpicker.h"
+#include "wx/slider.h"
 
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <glm/gtx/intersect.hpp> 
 
 #include "OBJfile.h"
 #include "rayTracer.h"
 #include "GLfunctions.h"
 #include <ctime>
+
+
+#define ID_LASER_COLOUR		2000
+#define ID_MESH_COLOUR		2001
+#define ID_LASER_SLIDER		2002
+#define ID_MESH_SLIDER		2003
 
 class GLcanvas;
 
@@ -74,11 +79,20 @@ public:
 	wxTextCtrl* bigTEXT;
 
 	wxColourPickerCtrl* laserCOLOUR;
-	wxColourPickerCtrl* laserCOLOUR2;
+	wxColourPickerCtrl* meshCOLOUR;
+	wxSlider* laserSlider;
+	wxSlider* meshSlider;
+
+	wxTextCtrl* Lrotation[3];
+	wxTextCtrl* reflections;
+	wxTextCtrl* laserSPEED;
 
 private:
 	void OnExit(wxCommandEvent& event);
-	void laserCOLORpicked(wxColourPickerEvent& event);
+	void ONlaserCOLOUR(wxColourPickerEvent& event);
+	void ONmeshCOLOUR(wxColourPickerEvent& event);
+	void ONlaserSlider(wxScrollEvent& event);
+	void ONmeshSlider(wxScrollEvent& event);
 
 };
 
@@ -111,13 +125,13 @@ public:
 	OBJfile file;
 	std::vector<Face> faces;
 
-	vec3 Lcolour{ 1,0,0 };
+	vec4 Lcolour{ 1,0,0,1 };
 
 	wxDECLARE_EVENT_TABLE();
 };
 
 
-
+	
 
 wxBEGIN_EVENT_TABLE(GLcanvas, wxGLCanvas)
 EVT_PAINT(GLcanvas::OnPaint)

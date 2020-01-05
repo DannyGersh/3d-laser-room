@@ -31,10 +31,13 @@ void move(GLuint programID, glm::mat4& mat, glm::vec3 scale)
 	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
 }
 
-void drawLINE(vec3 a, vec3 b, vec3 color)
+
+
+void drawLINE(vec3 a, vec3 b, vec4 color)
 {
 	struct data {
-		glm::vec3 a, color;
+		vec3 point;
+		vec4 color;
 	};
 	data d[] = {
 		{a, color},
@@ -60,18 +63,19 @@ void drawLINE(vec3 a, vec3 b, vec3 color)
 	);
 	glVertexAttribPointer(
 		1,
-		3,
+		4,
 		GL_FLOAT,
 		GL_FALSE,
 		sizeof(struct data),
-		(void*)(sizeof(data::a))
+		(void*)(sizeof(data::point))
 	);
 	glDrawArrays(GL_LINES, 0, 3);
 }
-void drawLINE(Line l, vec3 color)
+void drawLINE(Line l, vec4 color)
 {
 	struct data {
-		glm::vec3 a, color;
+		vec3 point;
+		vec4 color;
 	};
 	data d[] = {
 		{l.a, color},
@@ -97,18 +101,20 @@ void drawLINE(Line l, vec3 color)
 	);
 	glVertexAttribPointer(
 		1,
-		3,
+		4,
 		GL_FLOAT,
 		GL_FALSE,
 		sizeof(struct data),
-		(void*)(sizeof(data::a))
+		(void*)(sizeof(data::point))
 	);
 	glDrawArrays(GL_LINES, 0, 3);
 }
-void drawLINE2(vec3 a, vec3 b, vec3 color)
+
+void drawLINE2(vec3 a, vec3 b, vec4 color)
 {
 	struct data {
-		glm::vec3 a, color;
+		vec3 point;
+		vec4 color;
 	};
 	data d[] = {
 		{a - vec3{.01,.01,.01}, color},
@@ -134,22 +140,23 @@ void drawLINE2(vec3 a, vec3 b, vec3 color)
 	);
 	glVertexAttribPointer(
 		1,
-		3,
+		4,
 		GL_FLOAT,
 		GL_FALSE,
 		sizeof(struct data),
-		(void*)(sizeof(data::a))
+		(void*)(sizeof(data::point))
 	);
 	glDrawArrays(GL_LINES, 0, 3);
 }
-void drawLINE2(Line l, vec3 color)
+void drawLINE2(Line l, vec4 color)
 {
 	struct data {
-		glm::vec3 a, color;
+		vec3 point;
+		vec4 color;
 	};
 	data d[] = {
-		{l.a - vec3{.01,.01,.01}, color},
-		{l.b - vec3{.01,.01,.01}, color},
+		{l.a, color},
+		{l.b, color},
 	};
 
 	GLuint buffer;
@@ -171,59 +178,22 @@ void drawLINE2(Line l, vec3 color)
 	);
 	glVertexAttribPointer(
 		1,
-		3,
+		4,
 		GL_FLOAT,
 		GL_FALSE,
 		sizeof(struct data),
-		(void*)(sizeof(data::a))
-	);
-	glDrawArrays(GL_LINES, 0, 3);
-}
-void drawLINE(vec3 a, vec3 b, vec3 color1, vec3 color2)
-{
-	struct data {
-		glm::vec3 a, color;
-	};
-	data d[] = {
-		{a, color1},
-		{b, color2},
-	};
-
-	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(d), &d, GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glVertexAttribPointer(
-		0,							// axes shader variables at location 0
-		3,							// number of atrributes
-		GL_FLOAT,					// type
-		GL_FALSE,					// normalized?
-		sizeof(data),               // stride: total size of 1 triangle
-		(void*)0					// size of offset from start
-	);
-	glVertexAttribPointer(
-		1,
-		3,
-		GL_FLOAT,
-		GL_FALSE,
-		sizeof(struct data),
-		(void*)(sizeof(data::a))
+		(void*)(sizeof(data::point))
 	);
 	glDrawArrays(GL_LINES, 0, 3);
 }
 
-void drawTriangle(vec3 a, vec3 b, vec3 c, vec3 color)
+void drawTriangle(vec3 a, vec3 b, vec3 c, vec4 color)
 {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	struct attributes {
-		glm::vec3 vertrex;
-		glm::vec3 color;
+		glm::vec3 position;
+		glm::vec4 _color;
 	};
 	attributes triangle_attributes[] = {
 		{a, color},
@@ -250,21 +220,21 @@ void drawTriangle(vec3 a, vec3 b, vec3 c, vec3 color)
 	);
 	glVertexAttribPointer(
 		1,
-		3,
+		4,
 		GL_FLOAT,
 		GL_FALSE,
 		sizeof(struct attributes),
-		(void*)(sizeof(attributes::color))
+		(void*)(sizeof(attributes::position))
 	);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
-void drawTriangle(Face f, vec3 color)
+void drawTriangle(Face f, vec4 color)
 {
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	struct attributes {
-		glm::vec3 vertrex;
-		glm::vec3 color;
+		glm::vec3 position;
+		glm::vec4 _color;
 	};
 	attributes triangle_attributes[] = {
 		{f.p[0], color},
@@ -291,11 +261,11 @@ void drawTriangle(Face f, vec3 color)
 	);
 	glVertexAttribPointer(
 		1,
-		3,
+		4,
 		GL_FLOAT,
 		GL_FALSE,
 		sizeof(struct attributes),
-		(void*)(sizeof(attributes::color))
+		(void*)(sizeof(attributes::position))
 	);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }

@@ -3,9 +3,9 @@
 out vec4 color;
 in vec4 fragmentColor;
 
-uniform vec4 poop;
+uniform vec4 inCOLOR;
 
 void main() {
-	color = fragmentColor;
-	//color = vec4(1, 0, 0, 1);
+	color = inCOLOR;
+	//color = vec4(0, 1, 1, 1);
 }

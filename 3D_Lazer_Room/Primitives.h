@@ -1,6 +1,6 @@
 #pragma once
 #include "Debug.h"
-#define MIN 0.0001
+#define MIN 0.0005
 #define MAX 1000000
 
 using namespace glm;
@@ -56,7 +56,6 @@ struct Ray {
 struct Line 
 {
 	vec3 a, b;
-	vec3 t;
 
 	bool isONline(vec3 p)
 	{
@@ -97,7 +96,6 @@ struct Line
 	{
 		a = l.a;
 		b = l.b;
-		t = l.t;
 	}
 
 };

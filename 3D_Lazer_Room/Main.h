@@ -87,6 +87,8 @@ public:
 	wxTextCtrl* reflections;
 	wxTextCtrl* laserSPEED;
 
+	bool finSETUP{ 0 };
+
 private:
 	void OnExit(wxCommandEvent& event);
 	void ONlaserCOLOUR(wxColourPickerEvent& event);
@@ -112,9 +114,16 @@ private:
 	Frame* frame;
 	wxGLContext* context;
 
-	GLuint programID;
 	mat4 trans;
 	clock_t begin;
+
+	// GLuint programID;
+	GLuint ProgramID;
+	GLuint SHAD_vertex;
+	GLuint SHAD_uniCOLORfragment;
+	GLuint SHAD_multiCOLORfragment;
+	mat4 cam_uniform;
+	mat4 camera;
 
 	// C = camera, L = lazer
 	float CrotateX{ 0 }, CrotateY{ 0 }, CrotateZ{ 0 };
@@ -124,8 +133,9 @@ private:
 public:
 	OBJfile file;
 	std::vector<Face> faces;
+	std::vector<Line> lines;
 
-	vec4 Lcolour{ 1,0,0,1 };
+	vec4 Lcolour{ 0,1,1,1 };
 	vec4 Mcolour{ .3,.1,1,.5 };
 
 	wxDECLARE_EVENT_TABLE();
@@ -139,3 +149,5 @@ EVT_PAINT(GLcanvas::OnPaint)
 EVT_KEY_DOWN(GLcanvas::OnKeyDown)
 EVT_MOUSEWHEEL(GLcanvas::OnMouseWeel)
 wxEND_EVENT_TABLE() 
+
+

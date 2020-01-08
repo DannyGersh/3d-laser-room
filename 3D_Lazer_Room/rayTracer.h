@@ -7,14 +7,19 @@ using namespace std;
 
 
 
-vec4 vtv(vec3 v) {
+inline vec4 vtv(vec3 v) {
 	return { v.x,v.y,v.z,0 };
 }
-vec3 vtv(vec4 v) {
+inline vec3 vtv(vec4 v) {
 	return { v.x,v.y,v.z };
 }
 
-bool sameDir(Line la, Line lb) {
+inline float v3v3DEGREE(vec3 a, vec3 b)
+{
+	return dot(a, b) / (length(a)*length(b));
+}
+
+inline bool sameDir(Line la, Line lb) {
 	vec3 a{ normalize(la.a - la.b) };
 	vec3 b{ normalize(lb.a - lb.b) };
 	if (
@@ -26,7 +31,7 @@ bool sameDir(Line la, Line lb) {
 
 	return false;
 }
-bool sameDir(vec3 va, vec3 vb) {
+inline bool sameDir(vec3 va, vec3 vb) {
 	vec3 a{ normalize(va) };
 	vec3 b{ normalize(vb) };
 	if (
@@ -69,7 +74,7 @@ inline vec3 GETintersection(Eplane& p, Eline l)
 	return result;
 }
 
-int testRayTriangle(vec3& a, vec3& b, vec3& c, vec3& p)
+inline int testRayTriangle(vec3& a, vec3& b, vec3& c, vec3& p)
 {
 	const float e1 = dot(cross(a, b), p);
 	const float e2 = dot(cross(b, c), p);
@@ -86,18 +91,20 @@ int testRayTriangle(vec3& a, vec3& b, vec3& c, vec3& p)
 		return Ray::_Onedge;
 
 	else
+		q("_INtriangle");
+		q(e1); q(e2); q(e3); q();
 		return Ray::_INtriangle;
 }
 
 
-vec3 reflect(Eplane plane, vec3 direction)
+inline vec3 reflect(Eplane plane, vec3 direction)
 {
 	// I - 2.0 * dot(N, I) * N.
 
 	vec3 normal = normalize(plane.n);
 	return { direction - (vec3{2,2,2} * dot(normal, direction) * normal) };
 }
-vec3 reflect(vec3 n, vec3 direction)
+inline vec3 reflect(vec3 n, vec3 direction)
 {
 	// I - 2.0 * dot(N, I) * N.
 

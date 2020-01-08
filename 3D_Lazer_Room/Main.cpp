@@ -32,7 +32,7 @@ Frame::Frame()
 		{
 			GUIsizer->AddSpacer(10);
 			laserCOLOUR = new wxColourPickerCtrl(this, ID_LASER_COLOUR);
-			laserCOLOUR->SetColour(wxColour(canvas->Lcolour.x * 255, 0, 0));
+			laserCOLOUR->SetColour(wxColour(canvas->Lcolour.x * 255, canvas->Lcolour.y * 255, canvas->Lcolour.z * 255));
 			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Lazer colour:"));
 			GUIsizer->Add(laserCOLOUR);
 			GUIsizer->AddSpacer(10);
@@ -124,6 +124,8 @@ Frame::Frame()
 	SetPosition({ 50, 50 });
 	SetClientSize(1000, 800);
 	Show();
+
+	finSETUP = true;
 }
 
 void Frame::OnExit(wxCommandEvent& event)
@@ -174,9 +176,9 @@ GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 		face.p[0] = file.vertices[file.indices[i + 0]];
 		face.p[1] = file.vertices[file.indices[i + 1]];
 		face.p[2] = file.vertices[file.indices[i + 2]];
-		face.l[0] = Line{ face.p[0],face.p[1], (face.p[0] - face.p[1]) };
-		face.l[1] = Line{ face.p[0],face.p[2], (face.p[0] - face.p[2]) };
-		face.l[2] = Line{ face.p[1],face.p[2], (face.p[1] - face.p[2]) };
+		face.l[0] = Line{ face.p[0],face.p[1] };
+		face.l[1] = Line{ face.p[0],face.p[2] };
+		face.l[2] = Line{ face.p[1],face.p[2] };
 		face.n = cross(face.p[1] - face.p[0], face.p[2] - face.p[0]);
 		// face.n = { -face.n.x,-face.n.y,-face.n.z };
 		face.init_Equation();
@@ -207,11 +209,11 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	vec3 pa;
 	vec3 pb;
 	vec3 intersect;
-	Face face;
+	vec3 normal;
 	int last = Ray::_INtriangle;
 	int count{ 0 };
 
-	//vector<vec3> lines{ pa };
+	//vector<vec3> lines({pa,pb});
 
 	// stuff
 	{
@@ -231,13 +233,19 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			glEnable(GL_LINE_SMOOTH);
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-			programID = LoadShaders("shaders/vertex.shader", "shaders/fragment.shader");
-			glUseProgram(programID);
-		}
+			//multyCOLOR_programID = LoadShaders(c, "shaders/fragment.shader");
+			//uniCOLOR_programID = LoadShaders("shaders/vertex.shader", "shaders/unicolor_fragment.shader");
 
+			SHAD_vertex = compileSHADER("shaders/vertex.shader", GL_VERTEX_SHADER);
+			SHAD_uniCOLORfragment = compileSHADER("shaders/unicolor_fragment.shader", GL_FRAGMENT_SHADER);
+			SHAD_multiCOLORfragment = compileSHADER("shaders/fragment.shader", GL_FRAGMENT_SHADER);
+			ProgramID = glCreateProgram();
+			linkPROGRAM(ProgramID, SHAD_vertex, SHAD_multiCOLORfragment);
+		}
+		
 		// camera
 		{
-			mat4 camera(1);
+			camera = mat4(1);
 			wxSize screenSIZE = this->GetSize();
 			float sx = screenSIZE.x, sy = screenSIZE.y;
 
@@ -245,11 +253,11 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			float r = sx / sy;
 			x = x / r;
 
-			scale(programID, camera, { x, y, z });
-			rotate(programID, camera, CrotateX + 30, { 0,1,0 });
-			rotate(programID, camera, CrotateY + 30, { 1,0,0 });
+			scale(ProgramID, camera, { x, y, z });
+			rotate(ProgramID, camera, CrotateX + 30, { 0,1,0 });
+			rotate(ProgramID, camera, CrotateY + 30, { 1,0,0 });
 		}
-
+		
 		// lazer
 		{
 			mat4 lazer(1);
@@ -270,17 +278,13 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 				GL_UNSIGNED_INT,
 				(void*)0
 			);
-
-			//edge e = edges[7];
-			//drawTriangle(e.face[0]->p[0], e.face[0]->p[1], e.face[0]->p[2], { 1,0,0,1 });
-			//drawTriangle(e.face[1]->p[0], e.face[1]->p[1], e.face[1]->p[2], { 0,1,0,1 });
-			//drawTriangle(e.line.a, e.line.b, { 0,0,0 }, { 0,0,1,1 });
 		}
-	}
 
+	}
+	
 	// ray tracer
 	{
-		for (int t = 0; t < 200; t++) {
+		for (int t = 0; t < 100; t++) {
 			float l = MAX;
 			for (auto f : faces) {
 
@@ -289,46 +293,55 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 				if (sameDir(pa - pb, pa - _intersect))
 				{
 					int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
-					if (r != Ray::_NOintersection) {
+
+					if (r == Ray::_INtriangle){
 						float ll = length(pa - _intersect);
-						if (ll < l) { l = ll; intersect = _intersect; face = f; }
+						if (ll < l) { l = ll; intersect = _intersect; normal = f.n; }
 						last = Ray::_INtriangle;
 					}
-					if (r == Ray::_Onedge) {
-						float ll = length(pa - _intersect);
-						if (ll < l) { l = ll; intersect = _intersect; }
+				    if (r == Ray::_Onedge) {
+				    	float ll = length(pa - _intersect);
+				    	if (ll < l) { l = ll; intersect = _intersect; }
+						
+						vec3 n[2]; Face fff[2];
+						for (int i = 0; i < 3; i++) {
+							if (f.e[i].l.isONline(intersect)) {
+								n[0] = f.e[i].face[0]->n;
+								n[1] = f.e[i].face[1]->n;
+							}
+						}
+						if (v3v3DEGREE(pa - _intersect, n[0]) < v3v3DEGREE(pa - _intersect, n[1])) {
+							normal = n[0];
+						}
+						else {
+							normal = n[1];
+						}
 						last = Ray::_Onedge;
-					}
+				    }
+
 				}
 			}
 
-			drawLINE2(pa, intersect, Lcolour);
-			//lines.push_back(intersect);
+			//drawLINE(pa, intersect, Lcolour);
+			lines.push_back({ pa,intersect });
 
+			vec3 direction = reflect(normal, intersect - pa);
+			pb = intersect + direction;
+			pa = intersect;
 			if (last == Ray::_Onedge) {
-				count++;
-
-				vec3 n[2];
-				for (int i = 0; i < 3; i++) {
-					if (face.e[i].l.isONline(intersect)) {
-						n[0] = face.e[i].face[0]->n;
-						n[1] = face.e[i].face[1]->n;
-					}
-				}
-				vec3 direction = reflect(n[0] + n[1], intersect - pa);
-				pb = intersect + direction;
-				pa = intersect;
-			}
-			if (last == Ray::_INtriangle) {
-				count++;
-				vec3 direction = reflect(face.n, intersect - pa);
-				pb = intersect + direction;
-				pa = intersect;
+				//qq("_Onedge");
+				//drawLINE2(pa, pb, { 1,1,1,1 });
 			}
 		}
-		qq(count);
-
 	}
+
+
+	linkPROGRAM(ProgramID, SHAD_vertex, SHAD_uniCOLORfragment);
+	sendUNIFORMdata(ProgramID, camera);
+	set_uniCOLOR(ProgramID, Lcolour);
+
+	drawLINEs(lines);
+	lines.clear();
 
 	// swap buffor, cleanup
 	{
@@ -344,6 +357,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		frame->bigTEXT->SetValue(str);
 		str = "";
 	}
+
 }
 
 

@@ -80,20 +80,23 @@ inline int testRayTriangle(vec3& a, vec3& b, vec3& c, vec3& p)
 	const float e2 = dot(cross(b, c), p);
 	const float e3 = dot(cross(c, a), p);
 
-	if (e1 < 0 || e2 < 0 || e3 < 0)
+	if (e1 < 0 || e2 < 0 || e3 < 0) {
 		return Ray::_NOintersection;
-
+	}
 	else if (
 		(e1 > -MIN && e1 < MIN) ||
 		(e2 > -MIN && e2 < MIN) ||
 		(e3 > -MIN && e3 < MIN)
-		)
+		) {
+		q("_omEDGE");
+		q(e1); q(e2); q(e3); q();
 		return Ray::_Onedge;
-
-	else
+	}
+	else {
 		q("_INtriangle");
 		q(e1); q(e2); q(e3); q();
 		return Ray::_INtriangle;
+	}
 }
 
 
@@ -112,7 +115,52 @@ inline vec3 reflect(vec3 n, vec3 direction)
 	return { direction - (vec3{2,2,2} *dot(normal, direction) * normal) };
 }
 
+void rayTRIANGLEintersect(Line& line, vec3& intersect, vec3* normal, Face& f, int* last, float& l)
+{
 
+	vec3 _intersect = GETintersection(f.eplane, Eline{ line.a, line.b });
+
+	if (sameDir(line.a - line.b, line.a - _intersect))
+	{
+		int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
+
+		if (r == Ray::_Onedge) {
+			float ll = length(line.a - _intersect);
+			if (ll < l) { l = ll; intersect = _intersect; }
+
+			vec3 n[2]; Face fff[2];
+			for (int i = 0; i < 3; i++) {
+				if (f.e[i].l.isONline(intersect)) {
+					n[0] = f.e[i].face[0]->n;
+					n[1] = f.e[i].face[1]->n;
+				}
+			}
+			//if (v3v3DEGREE(line.a - _intersect, n[0]) < v3v3DEGREE(line.a - _intersect, n[1])) {
+			//	normal = n[0];
+			//}
+			//else {
+			//	normal = n[1];
+			//}
+			//normal = n[0] + n[1];
+
+			if (!sameDir(normalize(n[0]), normalize(n[1]))) {
+				 normal[0] = n[0]; normal[1] = n[1];
+				 *last = Ray::_Onedge;
+			}
+			else {
+				normal[0] = n[0]; 
+				*last = Ray::_INtriangle;
+			}
+			
+		}
+		else if (r == Ray::_INtriangle) {
+			float ll = length(line.a - _intersect);
+			if (ll < l) { l = ll; intersect = _intersect; normal[0] = f.n; }
+			*last = Ray::_INtriangle;
+		}
+		
+	}
+}
 
 
 

@@ -126,8 +126,8 @@ private:
 	mat4 camera;
 
 	// C = camera, L = lazer
-	float CrotateX{ 0 }, CrotateY{ 0 }, CrotateZ{ 0 };
-	float LrotateX{ 0 }, LrotateY{ 0 }, LrotateZ{ 0 };
+	float CrotateX{ 30 }, CrotateY{ 30 }, CrotateZ{ 0 };
+	float LrotateX{ -3.949997 }, LrotateY{ 44.999599 }, LrotateZ{ 0 };
 	float CscaleX{ .5 }, CscaleY{ .5 }, CscaleZ{ .5 };
 
 public:

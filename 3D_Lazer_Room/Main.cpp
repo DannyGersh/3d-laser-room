@@ -206,14 +206,11 @@ GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 
 void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 {
-	vec3 pa;
-	vec3 pb;
+	Line line;
 	vec3 intersect;
-	vec3 normal;
+	vec3 normal[2];
 	int last = Ray::_INtriangle;
 	int count{ 0 };
-
-	//vector<vec3> lines({pa,pb});
 
 	// stuff
 	{
@@ -254,8 +251,8 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			x = x / r;
 
 			scale(ProgramID, camera, { x, y, z });
-			rotate(ProgramID, camera, CrotateX + 30, { 0,1,0 });
-			rotate(ProgramID, camera, CrotateY + 30, { 1,0,0 });
+			rotate(ProgramID, camera, CrotateX, { 0,1,0 });
+			rotate(ProgramID, camera, CrotateY, { 1,0,0 });
 		}
 		
 		// lazer
@@ -264,7 +261,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			vec4 pa4{ 0,0,0,0 }, pb4{ .5,0,0,0 };
 			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateX)), vec3{ 0,0,1 });
 			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateY)), vec3{ 0,1,0 });
-			pa = vtv(pa4); pb = vtv(pb4);
+			line.a = vtv(pa4); line.b = vtv(pb4);
 		}
 
 		// draw the scene
@@ -284,54 +281,32 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 	
 	// ray tracer
 	{
-		for (int t = 0; t < 100; t++) {
-			float l = MAX;
+		for (int t = 0; t < 300; t++) {
+			float l = MAX; 
 			for (auto f : faces) {
-
-				vec3 _intersect = GETintersection(f.eplane, Eline{ pa, pb });
-
-				if (sameDir(pa - pb, pa - _intersect))
-				{
-					int r = testRayTriangle(f.p[0], f.p[1], f.p[2], _intersect);
-
-					if (r == Ray::_INtriangle){
-						float ll = length(pa - _intersect);
-						if (ll < l) { l = ll; intersect = _intersect; normal = f.n; }
-						last = Ray::_INtriangle;
-					}
-				    if (r == Ray::_Onedge) {
-				    	float ll = length(pa - _intersect);
-				    	if (ll < l) { l = ll; intersect = _intersect; }
-						
-						vec3 n[2]; Face fff[2];
-						for (int i = 0; i < 3; i++) {
-							if (f.e[i].l.isONline(intersect)) {
-								n[0] = f.e[i].face[0]->n;
-								n[1] = f.e[i].face[1]->n;
-							}
-						}
-						if (v3v3DEGREE(pa - _intersect, n[0]) < v3v3DEGREE(pa - _intersect, n[1])) {
-							normal = n[0];
-						}
-						else {
-							normal = n[1];
-						}
-						last = Ray::_Onedge;
-				    }
-
-				}
+				rayTRIANGLEintersect(line, intersect, normal, f, &last, l);
 			}
 
-			//drawLINE(pa, intersect, Lcolour);
-			lines.push_back({ pa,intersect });
+			lines.push_back({ line.a,intersect });
 
-			vec3 direction = reflect(normal, intersect - pa);
-			pb = intersect + direction;
-			pa = intersect;
+			if (last == Ray::_INtriangle) {
+				vec3 direction = reflect(normal[0], intersect - line.a);
+				line.b = intersect + direction;
+				line.a = intersect;
+				//drawLINE(line, { 1,0,0,1 });
+				qq("last _INtriangle");
+			}
 			if (last == Ray::_Onedge) {
-				//qq("_Onedge");
-				//drawLINE2(pa, pb, { 1,1,1,1 });
-			}
+				vec3 direction = reflect(normal[0], intersect - line.a);
+				line.b = intersect + direction;
+				line.a = intersect;
+				//drawLINE(line, { 1,0,0,1 });
+				direction = reflect(normal[1], direction);
+				line.b = intersect + direction;
+				line.a = intersect;
+				//drawLINE2(line, { 1,0,0,1 });
+				qq("last _onEDGE");
+			} 
 		}
 	}
 
@@ -342,7 +317,7 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	drawLINEs(lines);
 	lines.clear();
-
+	qq(LrotateX); qq(LrotateY);
 	// swap buffor, cleanup
 	{
 		glFlush();
@@ -351,6 +326,10 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		GLerror();
 		delete context;
 		
+		frame->Lrotation[0]->SetValue(to_string(LrotateX));
+		frame->Lrotation[1]->SetValue(to_string(LrotateY));
+		frame->Lrotation[2]->SetValue(to_string(LrotateZ));
+
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 		frame->freeTEXT->SetValue(std::to_string(elapsed_secs));

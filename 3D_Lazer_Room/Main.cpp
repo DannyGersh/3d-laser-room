@@ -4,7 +4,7 @@
 
 bool App::OnInit()
 {
-	Frame *frame = new Frame();
+	Frame* frame = new Frame();
 	frame->Show(true);
 	return true;
 }
@@ -36,7 +36,7 @@ Frame::Frame()
 			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Lazer colour:"));
 			GUIsizer->Add(laserCOLOUR);
 			GUIsizer->AddSpacer(10);
-			
+
 			laserSlider = new wxSlider(this, ID_LASER_SLIDER, 255, 0, 255);
 			GUIsizer->Add(laserSlider);
 			GUIsizer->AddSpacer(10);
@@ -53,7 +53,7 @@ Frame::Frame()
 			GUIsizer->Add(meshCOLOUR);
 			GUIsizer->AddSpacer(10);
 
-			meshSlider = new wxSlider(this, ID_MESH_SLIDER, 255/2, 0, 255);
+			meshSlider = new wxSlider(this, ID_MESH_SLIDER, 255 / 2, 0, 255);
 			GUIsizer->Add(meshSlider);
 			GUIsizer->AddSpacer(10);
 
@@ -83,19 +83,34 @@ Frame::Frame()
 
 		// speed and reflections
 		{
-			laserSPEED = new wxTextCtrl(this, wxID_ANY);
+			wxTextValidator* laserSPEED_validator = new wxTextValidator(wxFILTER_NUMERIC);
+			laserSPEED = new wxTextCtrl(this, ID_LASER_SPEED, to_string(canvas->Lspeed), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *laserSPEED_validator);
 			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "laser speed:"));
 			GUIsizer->Add(laserSPEED);
 			GUIsizer->AddSpacer(10);
 
-			reflections = new wxTextCtrl(this, wxID_ANY);
+			wxTextValidator* reflection_validator = new wxTextValidator(wxFILTER_DIGITS);
+
+			reflections = new wxTextCtrl(this, ID_REFLECTIONS, to_string(canvas->reflections), wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *reflection_validator);
 			GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Reflections:"));
 			GUIsizer->Add(reflections);
 			GUIsizer->AddSpacer(10);
+
+			Bind(wxEVT_TEXT_ENTER, &Frame::ONlaserSPEED, this, ID_LASER_SPEED);
+			Bind(wxEVT_TEXT_ENTER, &Frame::ONreflections, this, ID_REFLECTIONS);
 		}
 
+		// record
+		{
+			recordGIFF = new wxButton(this, ID_RECORD_GIFF, "Record");
+			recordGIFF->SetBackgroundColour({ 200,200,200 });
+			GUIsizer->Add(recordGIFF);
+			GUIsizer->AddSpacer(10);
 
-		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(150,0), wxTE_MULTILINE);
+			Bind(wxEVT_BUTTON, &Frame::ONrecordGIFF, this, ID_RECORD_GIFF);
+		}
+
+		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(150, 0), wxTE_MULTILINE);
 		GUIsizer->Add(bigTEXT, 1, 1);
 		bigTEXT->SetBackgroundColour({ 200,200,200 });
 
@@ -123,9 +138,8 @@ Frame::Frame()
 
 	SetPosition({ 50, 50 });
 	SetClientSize(1000, 800);
+	Maximize();
 	Show();
-
-	finSETUP = true;
 }
 
 void Frame::OnExit(wxCommandEvent& event)
@@ -162,15 +176,41 @@ void Frame::ONmeshSlider(wxScrollEvent& event)
 	canvas->Refresh();
 }
 
+void Frame::ONlaserROTATION(wxCommandEvent& event)
+{
+
+}
+void Frame::ONreflections(wxCommandEvent& event)
+{
+	int _reflections = stoi(string(reflections->GetValue()));
+	canvas->reflections = _reflections;
+	canvas->Refresh();
+}
+void Frame::ONlaserSPEED(wxCommandEvent& event)
+{
+	canvas->Lspeed = atof(laserSPEED->GetValue().c_str());
+	canvas->Refresh();
+}
+void Frame::ONrecordGIFF(wxCommandEvent& event)
+{
+	if (!ISrecording) {
+		ISrecording = true;
+		recordGIFF->SetBackgroundColour({ 255,50,50 });
+	}
+	else {
+		ISrecording = false;
+		recordGIFF->SetBackgroundColour({ 200,200,200 });
+	}
+}
 
 
-GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
+GLcanvas::GLcanvas(wxWindow* parent, Frame* _frame, int* attribList)
 	: wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxFULL_REPAINT_ON_RESIZE),
 	file("box.obj"),
-	frame(_frame), 
+	frame(_frame),
 	trans(1)
 {
-	for (int i = 0; i < file.indices.size(); i += 3)
+	for (unsigned i = 0; i < file.indices.size(); i += 3)
 	{
 		Face face;
 		face.p[0] = file.vertices[file.indices[i + 0]];
@@ -186,12 +226,12 @@ GLcanvas::GLcanvas(wxWindow *parent, Frame* _frame, int *attribList)
 		faces.push_back(face);
 	}
 
-	for (auto& f: faces) {
+	for (auto& f : faces) {
 		for (auto& ff : faces) {
-			if (f != ff) 
+			if (f != ff)
 			{
 				for (int l = 0; l < 3; l++) {
-					for (int ll = 0; ll < 3; ll++) 
+					for (int ll = 0; ll < 3; ll++)
 					{
 						if (f.l[l] == ff.l[ll]) {
 							f.e.push_back({ { &f,&ff }, f.l[l], f.n + ff.n });
@@ -230,16 +270,13 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			glEnable(GL_LINE_SMOOTH);
 			glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-			//multyCOLOR_programID = LoadShaders(c, "shaders/fragment.shader");
-			//uniCOLOR_programID = LoadShaders("shaders/vertex.shader", "shaders/unicolor_fragment.shader");
-
 			SHAD_vertex = compileSHADER("shaders/vertex.shader", GL_VERTEX_SHADER);
 			SHAD_uniCOLORfragment = compileSHADER("shaders/unicolor_fragment.shader", GL_FRAGMENT_SHADER);
 			SHAD_multiCOLORfragment = compileSHADER("shaders/fragment.shader", GL_FRAGMENT_SHADER);
 			ProgramID = glCreateProgram();
 			linkPROGRAM(ProgramID, SHAD_vertex, SHAD_multiCOLORfragment);
 		}
-		
+
 		// camera
 		{
 			camera = mat4(1);
@@ -251,16 +288,16 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 			x = x / r;
 
 			scale(ProgramID, camera, { x, y, z });
-			rotate(ProgramID, camera, CrotateX, { 0,1,0 });
-			rotate(ProgramID, camera, CrotateY, { 1,0,0 });
+			rotate(ProgramID, camera, Crotate.x, { 0,1,0 });
+			rotate(ProgramID, camera, Crotate.y, { 1,0,0 });
 		}
-		
-		// lazer
+
+		// laser
 		{
 			mat4 lazer(1);
 			vec4 pa4{ 0,0,0,0 }, pb4{ .5,0,0,0 };
-			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateX)), vec3{ 0,0,1 });
-			pb4 = pb4 * glm::rotate(lazer, float(radians(LrotateY)), vec3{ 0,1,0 });
+			pb4 = pb4 * glm::rotate(lazer, float(radians(Lrotate.x)), vec3{ 0,0,1 });
+			pb4 = pb4 * glm::rotate(lazer, float(radians(Lrotate.y)), vec3{ 0,1,0 });
 			line.a = vtv(pa4); line.b = vtv(pb4);
 		}
 
@@ -278,11 +315,11 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		}
 
 	}
-	
+
 	// ray tracer
 	{
-		for (int t = 0; t < 300; t++) {
-			float l = MAX; 
+		for (int t = 0; t < reflections; t++) {
+			float l = MAX;
 			for (auto f : faces) {
 				rayTRIANGLEintersect(line, intersect, normal, f, &last, l);
 			}
@@ -293,31 +330,48 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 				vec3 direction = reflect(normal[0], intersect - line.a);
 				line.b = intersect + direction;
 				line.a = intersect;
-				//drawLINE(line, { 1,0,0,1 });
-				qq("last _INtriangle");
+				//drawLINE2(line, { 1,1,1,1 });
 			}
-			if (last == Ray::_Onedge) {
+			else if (last == Ray::_Onedge) {
+				// double hit scenario:
+				// onley works when planes are <= 90 degrees to each other.
 				vec3 direction = reflect(normal[0], intersect - line.a);
 				line.b = intersect + direction;
 				line.a = intersect;
-				//drawLINE(line, { 1,0,0,1 });
 				direction = reflect(normal[1], direction);
 				line.b = intersect + direction;
 				line.a = intersect;
-				//drawLINE2(line, { 1,0,0,1 });
-				qq("last _onEDGE");
-			} 
+				//drawLINE2(line, { 1,1,1,1 });
+			}
 		}
 	}
 
+	// draw laser
+	{
+		linkPROGRAM(ProgramID, SHAD_vertex, SHAD_uniCOLORfragment);
+		sendUNIFORMdata(ProgramID, camera);
+		set_uniCOLOR(ProgramID, Lcolour);
 
-	linkPROGRAM(ProgramID, SHAD_vertex, SHAD_uniCOLORfragment);
-	sendUNIFORMdata(ProgramID, camera);
-	set_uniCOLOR(ProgramID, Lcolour);
+		drawLINEs(lines);
+		lines.clear();
+	}
 
-	drawLINEs(lines);
-	lines.clear();
-	qq(LrotateX); qq(LrotateY);
+	//qq(Lrotate.x); qq(Lrotate.y);
+
+	if (frame->ISrecording)
+	{
+		//wxSize s = GetSize();
+		//BYTE* r = new BYTE[s.x * s.y];
+		//BYTE* g = new BYTE[s.x * s.y];
+		//BYTE* b = new BYTE[s.x * s.y];
+		//glReadPixels(0, 0, s.x, s.y, GL_RED, GL_UNSIGNED_BYTE, r);
+		//glReadPixels(0, 0, s.x, s.y, GL_GREEN, GL_UNSIGNED_BYTE, g);
+		//glReadPixels(0, 0, s.x, s.y, GL_BLUE, GL_UNSIGNED_BYTE, b);
+		//
+		//makeMP4video("c:/danny/poop.mp4", s.x, s.y, r, g, b);
+		//GLerror();
+	}
+
 	// swap buffor, cleanup
 	{
 		glFlush();
@@ -325,10 +379,10 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 		GLerror();
 		delete context;
-		
-		frame->Lrotation[0]->SetValue(to_string(LrotateX));
-		frame->Lrotation[1]->SetValue(to_string(LrotateY));
-		frame->Lrotation[2]->SetValue(to_string(LrotateZ));
+
+		frame->Lrotation[0]->SetValue(to_string(Lrotate.x));
+		frame->Lrotation[1]->SetValue(to_string(Lrotate.y));
+		frame->Lrotation[2]->SetValue(to_string(Lrotate.z));
 
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
@@ -342,38 +396,35 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 void GLcanvas::OnKeyDown(wxKeyEvent& event)
 {
-	float Cspeed = 5.0f;
-	float Lspeed = .05f;
-
 	switch (event.GetKeyCode())
 	{
 	case WXK_RETURN:
 		frame->Destroy();
 
 	case WXK_LEFT:
-		CrotateX += Cspeed;
+		Crotate.x += Cspeed;
 		break;
 	case WXK_RIGHT:
-		CrotateX -= Cspeed;
+		Crotate.x -= Cspeed;
 		break;
 	case WXK_UP:
-		CrotateY += Cspeed;
+		Crotate.y += Cspeed;
 		break;
 	case WXK_DOWN:
-		CrotateY -= Cspeed;
+		Crotate.y -= Cspeed;
 		break;
 
 	case 'A':
-		LrotateX -= Lspeed;
+		Lrotate.x -= Lspeed;
 		break;
 	case 'D':
-		LrotateX += Lspeed;
+		Lrotate.x += Lspeed;
 		break;
 	case 'W':
-		LrotateY += Lspeed;
+		Lrotate.y += Lspeed;
 		break;
 	case 'S':
-		LrotateY -= Lspeed;
+		Lrotate.y -= Lspeed;
 		break;
 
 	default:

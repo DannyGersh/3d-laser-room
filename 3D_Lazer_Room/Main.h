@@ -3,26 +3,34 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <ctime>
 
-#include <wx/wx.h>
 #include "GL/glew.h"
+#include <wx/wx.h>
 #include "wx/glcanvas.h"
 #include "wx/clrpicker.h"
 #include "wx/slider.h"
+#include <wx/regex.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "OBJfile.h"
+
 #include "rayTracer.h"
 #include "GLfunctions.h"
-#include <ctime>
 
+#include "makeMP4video.h"
 
 #define ID_LASER_COLOUR		2000
 #define ID_MESH_COLOUR		2001
 #define ID_LASER_SLIDER		2002
 #define ID_MESH_SLIDER		2003
+#define ID_LASER_SPEED		2004
+#define ID_REFLECTIONS		2005
+#define ID_RECORD_GIFF		2006
+
+
 
 class GLcanvas;
 
@@ -73,21 +81,22 @@ public:
 	Frame();
 	GLcanvas* canvas;
 	wxGLContext* context;
+
 	wxTextCtrl* GLversion;
 	wxTextCtrl* freeTEXT;
-	std::vector<wxTextCtrl*> textCTRLS;
 	wxTextCtrl* bigTEXT;
 
 	wxColourPickerCtrl* laserCOLOUR;
-	wxColourPickerCtrl* meshCOLOUR;
 	wxSlider* laserSlider;
+	wxColourPickerCtrl* meshCOLOUR;
 	wxSlider* meshSlider;
 
 	wxTextCtrl* Lrotation[3];
 	wxTextCtrl* reflections;
 	wxTextCtrl* laserSPEED;
 
-	bool finSETUP{ 0 };
+	wxButton* recordGIFF;
+	bool ISrecording = false;
 
 private:
 	void OnExit(wxCommandEvent& event);
@@ -95,6 +104,10 @@ private:
 	void ONmeshCOLOUR(wxColourPickerEvent& event);
 	void ONlaserSlider(wxScrollEvent& event);
 	void ONmeshSlider(wxScrollEvent& event);
+	void ONlaserROTATION(wxCommandEvent& event);
+	void ONreflections(wxCommandEvent& event);
+	void ONlaserSPEED(wxCommandEvent& event);
+	void ONrecordGIFF(wxCommandEvent& event);
 
 };
 
@@ -105,12 +118,12 @@ wxIMPLEMENT_APP(App);
 class GLcanvas : public wxGLCanvas
 {
 public:
-	GLcanvas(wxWindow *parent, Frame* frame, int *attribList = NULL);
+	GLcanvas(wxWindow* parent, Frame* frame, int* attribList = NULL);
 	void OnPaint(wxPaintEvent& event);
 	void OnKeyDown(wxKeyEvent& event);
 	void OnMouseWeel(wxMouseEvent& event);
 
-private:
+public:
 	Frame* frame;
 	wxGLContext* context;
 
@@ -126,9 +139,13 @@ private:
 	mat4 camera;
 
 	// C = camera, L = lazer
-	float CrotateX{ 30 }, CrotateY{ 30 }, CrotateZ{ 0 };
-	float LrotateX{ -3.949997 }, LrotateY{ 44.999599 }, LrotateZ{ 0 };
+	int reflections = 500;
+	float Cspeed = 5.0f;
+	float Lspeed = 0.01f;
+	vec3 Crotate = { 0.0f, 0.0f, 0.0f };
+	vec3 Lrotate = { 0.0f, 0.0f, 0.0f };
 	float CscaleX{ .5 }, CscaleY{ .5 }, CscaleZ{ .5 };
+
 
 public:
 	OBJfile file;
@@ -142,12 +159,12 @@ public:
 };
 
 
-	
+
 
 wxBEGIN_EVENT_TABLE(GLcanvas, wxGLCanvas)
 EVT_PAINT(GLcanvas::OnPaint)
 EVT_KEY_DOWN(GLcanvas::OnKeyDown)
 EVT_MOUSEWHEEL(GLcanvas::OnMouseWeel)
-wxEND_EVENT_TABLE() 
+wxEND_EVENT_TABLE()
 
 

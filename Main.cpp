@@ -60,10 +60,10 @@ MyFrame::MyFrame()
 			glDeleteShader(SH::Fragment);
 			glDeleteShader(SH::UniColor);
 			
-			cam = glm::mat4(1);
-			GL::Scale(PR::UniColorLaser, cam, {.5,.5,.5}, "trans");
-			GL::Rotate(PR::UniColorLaser, cam, 45, glm::vec3(1,1,1), "trans");
-			GL::SetUniform(PR::UniColorMesh, cam, "trans");
+			CTLV.cam = glm::mat4(1);
+			GL::Scale(PR::UniColorLaser, CTLV.cam, {.5,.5,.5}, "trans");
+			GL::Rotate(PR::UniColorLaser, CTLV.cam, 45, glm::vec3(1,1,1), "trans");
+			GL::SetUniform(PR::UniColorMesh, CTLV.cam, "trans");
 			
 			glEnable (GL_BLEND); 
 			glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -136,20 +136,23 @@ MyFrame::MyFrame()
 		
 		// speed and Reflections
 		{
-			wxTextValidator* LaserSPEED_validator = new wxTextValidator(wxFILTER_NUMERIC);
-			CTL.LaserSPEED = new wxTextCtrl(this, ID_LASER_SPEED, "POOP_2", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *LaserSPEED_validator);
+			wxTextValidator* validator = new wxTextValidator(wxFILTER_NUMERIC);
+			CTL.LaserSPEED = new wxTextCtrl(this, ID_LASER_SPEED, "3", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *validator);
 			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "laser speed:"));
 			SIZER.Gui->Add(CTL.LaserSPEED);
+
+			CTL.MeshSPEED = new wxTextCtrl(this, ID_LASER_SPEED, "3", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *validator);
+			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "Mesh speed:"));
+			SIZER.Gui->Add(CTL.MeshSPEED);
 			SIZER.Gui->AddSpacer(10);
-		
-			wxTextValidator* reflection_validator = new wxTextValidator(wxFILTER_DIGITS);
-		
-			CTL.Reflections = new wxTextCtrl(this, ID_REFLECTIONS, "POOP_1", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *reflection_validator);
+
+			CTL.Reflections = new wxTextCtrl(this, ID_REFLECTIONS, "POOP_1", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *validator);
 			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "CTL.Reflections:"));
 			SIZER.Gui->Add(CTL.Reflections);
 			SIZER.Gui->AddSpacer(10);
 		
 			Bind(wxEVT_TEXT_ENTER, &MyFrame::OnLaserSPEED, this, ID_LASER_SPEED);
+			Bind(wxEVT_TEXT_ENTER, &MyFrame::OnMeshSPEED, this, ID_MESH_SPEED);
 			Bind(wxEVT_TEXT_ENTER, &MyFrame::OnReflections, this, ID_REFLECTIONS);
 		}
 	}
@@ -198,6 +201,7 @@ void MyFrame::OnRender(wxPaintEvent& evt)
     canvas->SwapBuffers();
 	
 	GL::CheckError();
+	evt.Skip();
 }
 void MyFrame::OnSize(wxSizeEvent& evt)
 {
@@ -214,6 +218,7 @@ void MyFrame::OnLaserColour(wxColourPickerEvent& evt)
 	float a = CTL.LaserSlider->GetValue() / 255.;
 	GL::SetUniform(PR::UniColorLaser, glm::vec4(r,g,b,a), "inCOLOR");
 	Refresh();
+	evt.Skip();
 }; 
 void MyFrame::OnLaserSlider(wxScrollEvent& evt)
 {
@@ -224,6 +229,7 @@ void MyFrame::OnLaserSlider(wxScrollEvent& evt)
 	float a = CTL.LaserSlider->GetValue() / 255.;
 	GL::SetUniform(PR::UniColorLaser, glm::vec4(r,g,b,a), "inCOLOR");
 	Refresh();
+	evt.Skip();
 };
 void MyFrame::OnMeshColour(wxColourPickerEvent& evt) 
 {
@@ -235,6 +241,7 @@ void MyFrame::OnMeshColour(wxColourPickerEvent& evt)
 	CTL.MeshColour->SetColour(wxColour(c.Red(),c.Green(),c.Blue(),a*255));
 	GL::SetUniform(PR::UniColorMesh, glm::vec4(r,g,b,a), "inCOLOR");
 	Refresh();
+	evt.Skip();
 };
 void MyFrame::OnMeshSlider(wxScrollEvent& evt)
 {
@@ -245,48 +252,80 @@ void MyFrame::OnMeshSlider(wxScrollEvent& evt)
 	float a = CTL.MeshSlider->GetValue() / 255.;
 	GL::SetUniform(PR::UniColorMesh, glm::vec4(r,g,b,a), "inCOLOR");
 	Refresh();
+	evt.Skip();
 };
 void MyFrame::OnLaserRotation(wxCommandEvent& evt)
 {
-	
+	evt.Skip();
 };
-void MyFrame::OnLaserSPEED(wxCommandEvent& evt) {};
-void MyFrame::OnReflections(wxCommandEvent& evt) {};
-
-
-
-void MyApp::OnKey(wxKeyEvent& evt)
+void MyFrame::OnLaserSPEED(wxCommandEvent& evt)
 {
-		
-	//wxChar uc = evt.GetUnicodeKey();
-	//if (uc != WXK_NONE)
-	//{
-	//	if ( uc >= 32 )
-	//	{
-	//		switch(uc)
-	//		{
-	//			case 'A': 
-	//			{
-	//				GL::Rotate(PR::UniColorMesh, frame->cam, 20, glm::vec3(1,1,1), "trans");
-	//				GL::SetUniform(PR::UniColorLaser, frame->cam, "trans");
-	//				frame->Refresh();
-	//				evt.Skip();
-	//			};
-	//		}
-	//	}
-	//	else
-	//	{
-	//		switch (evt.GetKeyCode())
-	//		{
-	//			//case WXK_LEFT:
-	//			//case WXK_RIGHT:
-	//			//	break;
-	//			
-	//			case WXK_RETURN:
-	//				exit(0);
-	//		}
-	//	}
-	//}
+	CTLV.Lspeed = atof(CTL.LaserSPEED->GetValue().c_str());
+	Refresh();
+	evt.Skip();
+};
+void MyFrame::OnMeshSPEED(wxCommandEvent& evt)
+{
+	CTLV.Mspeed = atof(CTL.MeshSPEED->GetValue().c_str());
+	Refresh();
+	evt.Skip();
+};
+void MyFrame::OnReflections(wxCommandEvent& evt)
+{
+	DB::LogF(DB::wxSimple, "POOP");
+	CTLV.Reflections = atof(CTL.MeshSPEED->GetValue().c_str());
+	Refresh();
+	evt.Skip();
+};
+
+
+
+void MyApp::OnKeyDown(wxKeyEvent& evt)
+{
+	wxChar uc = evt.GetUnicodeKey();
+	if (uc != WXK_NONE)
+	{
+		if ( uc >= 32 )
+		{	
+			switch(uc)
+			{
+				case 'A': 
+				{
+					frame->SetFocus();
+					GL::Rotate(PR::UniColorMesh, frame->CTLV.cam, frame->CTLV.Mspeed, glm::vec3(1,0,0), "trans");
+					GL::SetUniform(PR::UniColorLaser, frame->CTLV.cam, "trans");
+					frame->Refresh();
+					evt.Skip();
+				};
+				case 'D': 
+				{
+					frame->SetFocus();
+					GL::Rotate(PR::UniColorMesh, frame->CTLV.cam, frame->CTLV.Mspeed, glm::vec3(1,0,0), "trans");
+					GL::SetUniform(PR::UniColorLaser, frame->CTLV.cam, "trans");
+					frame->Refresh();
+					evt.Skip();
+				};
+				default:
+					evt.Skip();
+					return;
+			}
+		}
+		else
+		{
+			switch (evt.GetKeyCode())
+			{
+				//case WXK_LEFT:
+				//case WXK_RIGHT:
+				//	break;
+				
+				//case WXK_RETURN:
+				//	exit(0);
+				default:
+					evt.Skip();
+					return;
+			}
+		}
+	}
 
 }
 

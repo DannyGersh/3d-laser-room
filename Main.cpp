@@ -6,7 +6,7 @@ using namespace std;
 wxIMPLEMENT_APP(MyApp);
 bool MyApp::OnInit()
 {
-    MyFrame* frame = new MyFrame();
+    frame = new MyFrame();
     frame->Show(true);
     return true;
 }
@@ -40,7 +40,7 @@ MyFrame::MyFrame()
 				"GL_VERSION: "<<
 				glGetString(GL_VERSION)<<"\n";
 			DB::LogF(DB::Simple, ssm.str());
-
+	
 			GL::CheckError();
 		}
 		
@@ -61,9 +61,8 @@ MyFrame::MyFrame()
 			glDeleteShader(SH::UniColor);
 			
 			cam = glm::mat4(1);
-			cam2 = glm::mat4(1);
 			GL::Scale(PR::UniColorLaser, cam, {.5,.5,.5}, "trans");
-			GL::Rotate(PR::UniColorLaser, cam, 45, glm::vec3(1,1,1));
+			GL::Rotate(PR::UniColorLaser, cam, 45, glm::vec3(1,1,1), "trans");
 			GL::SetUniform(PR::UniColorMesh, cam, "trans");
 			
 			glEnable (GL_BLEND); 
@@ -73,7 +72,7 @@ MyFrame::MyFrame()
 		}
 	
 	}
-
+	
 	// init ctrls
 	{
 		// lazer colorPick
@@ -87,34 +86,34 @@ MyFrame::MyFrame()
 			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "Lazer colour:"));
 			SIZER.Gui->Add(CTL.LaserColour);
 			SIZER.Gui->AddSpacer(10);
-
+			
 			CTL.LaserSlider = new wxSlider(this, ID_LASER_SLIDER, 255, 0, 255);
 			SIZER.Gui->Add(CTL.LaserSlider);
 			SIZER.Gui->AddSpacer(10);
-
+		
 			Bind(wxEVT_COLOURPICKER_CHANGED, &MyFrame::OnLaserColour, this, ID_LASER_COLOUR);
 			Bind(wxEVT_SCROLL_THUMBTRACK, &MyFrame::OnLaserSlider, this, ID_LASER_SLIDER);
 		}
-
+		
 		// mesh colorPick
 		{
 			CTL.MeshColour = new wxColourPickerCtrl(this, ID_MESH_COLOUR);
 			CTL.MeshColour->SetColour(wxColour(201, 147, 212, 255));
 			
 			GL::SetUniform(PR::UniColorMesh, glm::vec4(201./255., 147./255., 212./255., 1.), "inCOLOR");
-
+		
 			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "Mesh colour:"));
 			SIZER.Gui->Add(CTL.MeshColour);
 			SIZER.Gui->AddSpacer(10);
-
+		
 			CTL.MeshSlider = new wxSlider(this, ID_MESH_SLIDER, 255, 0, 255);
 			SIZER.Gui->Add(CTL.MeshSlider);
 			SIZER.Gui->AddSpacer(10);
-
+		
 			Bind(wxEVT_COLOURPICKER_CHANGED, &MyFrame::OnMeshColour, this, ID_MESH_COLOUR);
 			Bind(wxEVT_SCROLL_THUMBTRACK, &MyFrame::OnMeshSlider, this, ID_MESH_SLIDER);
 		}
-
+		
 		// lazer rotation
 		{
 			wxBoxSizer* s[3] = {
@@ -134,7 +133,7 @@ MyFrame::MyFrame()
 			SIZER.Gui->Add(s[2]);
 			SIZER.Gui->AddSpacer(10);
 		}
-
+		
 		// speed and Reflections
 		{
 			wxTextValidator* LaserSPEED_validator = new wxTextValidator(wxFILTER_NUMERIC);
@@ -142,27 +141,26 @@ MyFrame::MyFrame()
 			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "laser speed:"));
 			SIZER.Gui->Add(CTL.LaserSPEED);
 			SIZER.Gui->AddSpacer(10);
-
+		
 			wxTextValidator* reflection_validator = new wxTextValidator(wxFILTER_DIGITS);
-
+		
 			CTL.Reflections = new wxTextCtrl(this, ID_REFLECTIONS, "POOP_1", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER, *reflection_validator);
 			SIZER.Gui->Add(new wxStaticText(this, wxID_ANY, "CTL.Reflections:"));
 			SIZER.Gui->Add(CTL.Reflections);
 			SIZER.Gui->AddSpacer(10);
-
+		
 			Bind(wxEVT_TEXT_ENTER, &MyFrame::OnLaserSPEED, this, ID_LASER_SPEED);
 			Bind(wxEVT_TEXT_ENTER, &MyFrame::OnReflections, this, ID_REFLECTIONS);
 		}
-
 	}
-
+	
 	// init sizers
 	{
 		SIZER.Main->Add(canvas, 1, wxEXPAND);
 		SIZER.Main->Add(SIZER.Gui, 0, wxEXPAND);
 		SetSizerAndFit(SIZER.Main);
 	}
-
+	
 	SetSizerAndFit(SIZER.Main);
 	Maximize();
 	Show();
@@ -260,35 +258,35 @@ void MyFrame::OnReflections(wxCommandEvent& evt) {};
 void MyApp::OnKey(wxKeyEvent& evt)
 {
 		
-	wxChar uc = evt.GetUnicodeKey();
-	if (uc != WXK_NONE)
-	{
-		if ( uc >= 32 )
-		{
-			switch(uc)
-			{
-				case 'A': 
-				{
-					GL::Rotate(PR::UniColorMesh, frame->cam, 20, glm::vec3(1,1,1));
-					GL::SetUniform(PR::UniColorLaser, frame->cam, "trans");
-					frame->Refresh();
-					evt.Skip();
-				};
-			}
-		}
-		else
-		{
-			switch (evt.GetKeyCode())
-			{
-				//case WXK_LEFT:
-				//case WXK_RIGHT:
-				//	break;
-				
-				case WXK_RETURN:
-					exit(0);
-			}
-		}
-	}
+	//wxChar uc = evt.GetUnicodeKey();
+	//if (uc != WXK_NONE)
+	//{
+	//	if ( uc >= 32 )
+	//	{
+	//		switch(uc)
+	//		{
+	//			case 'A': 
+	//			{
+	//				GL::Rotate(PR::UniColorMesh, frame->cam, 20, glm::vec3(1,1,1), "trans");
+	//				GL::SetUniform(PR::UniColorLaser, frame->cam, "trans");
+	//				frame->Refresh();
+	//				evt.Skip();
+	//			};
+	//		}
+	//	}
+	//	else
+	//	{
+	//		switch (evt.GetKeyCode())
+	//		{
+	//			//case WXK_LEFT:
+	//			//case WXK_RIGHT:
+	//			//	break;
+	//			
+	//			case WXK_RETURN:
+	//				exit(0);
+	//		}
+	//	}
+	//}
 
 }
 

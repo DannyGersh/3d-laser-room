@@ -98,51 +98,57 @@ void LinkProgram(GLuint programID, GLuint SHvertex, GLuint SHfragment)
 	
 	glUseProgram(programID);
 	
-	glDeleteShader(SHvertex);
-	glDeleteShader(SHfragment);
+	//glDeleteShader(SHvertex);
+	//glDeleteShader(SHfragment);
 	
 	CheckError();
 }
 
-void SetUniform(GLuint programID, glm::mat4 mat, const char* var)
+void SetUniform(GLuint ProgramID, glm::mat4 mat, const char* var)
 {
 	// var - name of variable to be set in shader
-	GLint uniTrans = glGetUniformLocation(programID, var);
+	glUseProgram(ProgramID);
+	GLint uniTrans = glGetUniformLocation(ProgramID, var);
 	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat));
 	CheckError();
 }
-void SetUniform(GLuint programID, glm::mat3 mat, const char* var)
+void SetUniform(GLuint ProgramID, glm::mat3 mat, const char* var)
 {
 	// var - name of variable to be set in shader
-	GLint uniTrans = glGetUniformLocation(programID, var);
+	glUseProgram(ProgramID);
+	GLint uniTrans = glGetUniformLocation(ProgramID, var);
 	glUniformMatrix3fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat));
 	CheckError();
 }
-void SetUniform(GLuint programID, glm::mat2 mat, const char* var)
+void SetUniform(GLuint ProgramID, glm::mat2 mat, const char* var)
 {
 	// var - name of variable to be set in shader
-	GLint uniTrans = glGetUniformLocation(programID, var);
+	glUseProgram(ProgramID);
+	GLint uniTrans = glGetUniformLocation(ProgramID, var);
 	glUniformMatrix2fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat));
 	CheckError();
 }
-void SetUniform(GLuint programID, glm::vec4 color, const char* var)
+void SetUniform(GLuint ProgramID, glm::vec4 color, const char* var)
 {
 	// var - name of variable to be set in shader
-	GLint uniTrans = glGetUniformLocation(programID, var);
+	glUseProgram(ProgramID);
+	GLint uniTrans = glGetUniformLocation(ProgramID, var);
 	glUniform4fv(uniTrans, 1, &color[0]);
 	CheckError();
 }
-void SetUniform(GLuint programID, glm::vec3 color, const char* var)
+void SetUniform(GLuint ProgramID, glm::vec3 color, const char* var)
 {
 	// var - name of variable to be set in shader
-	GLint uniTrans = glGetUniformLocation(programID, var);
+	glUseProgram(ProgramID);
+	GLint uniTrans = glGetUniformLocation(ProgramID, var);
 	glUniform3fv(uniTrans, 1, &color[0]);
 	CheckError();
 }
-void SetUniform(GLuint programID, glm::vec2 color, const char* var)
+void SetUniform(GLuint ProgramID, glm::vec2 color, const char* var)
 {
 	// var - name of variable to be set in shader
-	GLint uniTrans = glGetUniformLocation(programID, var);
+	glUseProgram(ProgramID);
+	GLint uniTrans = glGetUniformLocation(ProgramID, var);
 	glUniform2fv(uniTrans, 1, &color[0]);
 	CheckError();
 }
@@ -157,22 +163,25 @@ glm::vec3 Rotate(glm::vec3 point, glm::vec4 degree)
 	p = p * glm::rotate(m, float(glm::radians(degree.z)), glm::vec3{ 0,0,1 });
 	return degree;
 }
-void Rotate(GLuint programID, glm::mat4& mat, float degree, glm::vec3 axis)
+void Rotate(GLuint ProgramID, glm::mat4& mat, float degree, glm::vec3 axis, const char* var)
 {
+	glUseProgram(ProgramID);
 	mat = glm::rotate(mat, glm::radians(degree), axis); // rotate 
-	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
+	GLint uniTrans = glGetUniformLocation(ProgramID, var); // get the 'trans' uniform from shader
 	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
 }
-void Scale(GLuint programID, glm::mat4& mat, glm::vec3 scale)
+void Scale(GLuint ProgramID, glm::mat4& mat, glm::vec3 scale, const char* var)
 {
+	glUseProgram(ProgramID);
 	mat = glm::scale(mat, scale);
-	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
+	GLint uniTrans = glGetUniformLocation(ProgramID, var); // get the 'trans' uniform from shader
 	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
 }
-void Move(GLuint programID, glm::mat4& mat, glm::vec3 scale)
+void Move(GLuint ProgramID, glm::mat4& mat, glm::vec3 scale, const char* var)
 {
+	glUseProgram(ProgramID);
 	mat = glm::translate(mat, scale);
-	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
+	GLint uniTrans = glGetUniformLocation(ProgramID, var); // get the 'trans' uniform from shader
 	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
 }
 
@@ -195,6 +204,34 @@ void drawLINEs(std::vector<glm::vec3> points)
 		(void*)0					// size of offset from start
 	);
 	glDrawArrays(GL_LINES, 0, points.size());
+}
+void drawLINEsI(std::vector<glm::vec3> points, std::vector<unsigned int> Index, GLint mod)
+{
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, points.capacity() * sizeof(glm::vec3), &points[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glVertexAttribPointer(
+		0,							// axes shader variables at location 0
+		3,							// number of atrributes
+		GL_FLOAT,					// type
+		GL_FALSE,					// normalized?
+		sizeof(glm::vec3),          // stride: total size of 1 triangle
+		(void*)0					// size of offset from start
+	);
+	
+	GLuint IndexBuffer;
+	glGenBuffers(1, &IndexBuffer);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Index.capacity() * sizeof(unsigned int), &Index[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+
+	glDrawElements(mod, Index.size(), GL_UNSIGNED_INT, (void*)0);
 }
 
 void drawLINE(glm::vec3 a, glm::vec3 b, glm::vec4 color)

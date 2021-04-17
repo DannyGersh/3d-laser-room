@@ -60,18 +60,28 @@ MyFrame::MyFrame()
 		glDeleteShader(SH::Vertex);
 		glDeleteShader(SH::Fragment);
 		glDeleteShader(SH::UniColor);
-		
-		VAR::cam = glm::mat4(1);
-		GL::Scale(PR::UniColorLaser, VAR::cam, {.5,.5,.5}, "trans");
-		GL::Rotate(PR::UniColorLaser, VAR::cam, 45, glm::vec3(1,1,1), "trans");
-		GL::SetUniform(PR::UniColorMesh, VAR::cam, "trans");
-		
+
 		glEnable (GL_BLEND); 
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		
+		glClearColor(0, 0, 0, 1 );
 		GL::CheckError();
 	}
 	
+	// init GLbuffers
+	{
+		glGenBuffers(1, &VAR::MeshVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, VAR::MeshVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, VAR::box.capacity() * sizeof(glm::vec3), &(VAR::box[0]), GL_STATIC_DRAW);
+
+		glGenBuffers(1, &VAR::MeshIndexBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, VAR::MeshIndexBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, VAR::boxIndex.capacity() * sizeof(unsigned int), &(VAR::boxIndex[0]), GL_STATIC_DRAW);
+		
+		glGenBuffers(1, &VAR::LaserVertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, VAR::LaserVertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, VAR::Laser.size() * sizeof(glm::vec3), &(VAR::Laser[0]), GL_STATIC_DRAW);
+	}
 
 	// init gui
 	{
@@ -169,7 +179,7 @@ MyFrame::MyFrame()
 
 void BasicGLPane::OnRender(wxPaintEvent& evt)
 {
-	// init paint event_callback
+	// init and resize
 	{
 		SetCurrent(*context);
 		wxPaintDC(this); 
@@ -184,7 +194,7 @@ void BasicGLPane::OnRender(wxPaintEvent& evt)
 		}
 	}
 	
-	// Main
+	// camera
 	{
 		VAR::cam = glm::mat4(1);
 		GL::Scale(PR::UniColorLaser, VAR::cam, {.5,.5,.5}, "trans");
@@ -192,14 +202,16 @@ void BasicGLPane::OnRender(wxPaintEvent& evt)
 		GL::Rotate(PR::UniColorMesh, VAR::cam, VAR::Rotation.y, glm::vec3(0,1,0), "trans");
 		GL::Rotate(PR::UniColorMesh, VAR::cam, VAR::Rotation.z, glm::vec3(0,0,1), "trans");
 		GL::SetUniform(PR::UniColorLaser, VAR::cam, "trans");
-					
-		glClearColor(0, 0, 0, 1 );
+	}
+	// Main
+	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		glUseProgram(PR::UniColorLaser);
-		GL::drawLINE(glm::vec3(0,0,0), glm::vec3(1,1,0), glm::vec4(0,1,0,1));
+		GL::drawLINEsI(VAR::Laser, {}, VAR::LaserVertexBuffer, 0, GL_LINE_STRIP);
+		
 		glUseProgram(PR::UniColorMesh);
-		GL::drawLINEsI(box, boxIndex, GL_LINE_STRIP);
+		GL::drawLINEsI(VAR::box, VAR::boxIndex, VAR::MeshVertexBuffer, VAR::MeshIndexBuffer, GL_LINE_STRIP);
 	}
 	
 	glFlush();

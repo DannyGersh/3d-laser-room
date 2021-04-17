@@ -206,35 +206,6 @@ void drawLINEs(std::vector<glm::vec3> points)
 	);
 	glDrawArrays(GL_LINES, 0, points.size());
 }
-void drawLINEsI(std::vector<glm::vec3> points, std::vector<unsigned int> Index, GLint mod)
-{
-	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, points.capacity() * sizeof(glm::vec3), &points[0], GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glVertexAttribPointer(
-		0,							// axes shader variables at location 0
-		3,							// number of atrributes
-		GL_FLOAT,					// type
-		GL_FALSE,					// normalized?
-		sizeof(glm::vec3),          // stride: total size of 1 triangle
-		(void*)0					// size of offset from start
-	);
-	
-	GLuint IndexBuffer;
-	glGenBuffers(1, &IndexBuffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, Index.capacity() * sizeof(unsigned int), &Index[0], GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
-
-	glDrawElements(mod, Index.size(), GL_UNSIGNED_INT, (void*)0);
-}
-
 void drawLINE(glm::vec3 a, glm::vec3 b, glm::vec4 color)
 {
 	struct data {
@@ -276,6 +247,52 @@ void drawLINE(glm::vec3 a, glm::vec3 b, glm::vec4 color)
 
 
 
+void drawLINEsI(std::vector<glm::vec3> points, std::vector<unsigned int> Index, GLuint VertexBuffer, GLuint IndexBuffer, GLint mod)
+{
+	// if not using IndexBuffer, pass empty vector to Index, and zero to IndexBuffer.
+	
+	if(IndexBuffer != 0)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+	
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(glm::vec3),          // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IndexBuffer);
+		glDrawElements(mod, Index.size(), GL_UNSIGNED_INT, (void*)0);
+	}
+	else
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, points.capacity() * sizeof(glm::vec3), &points[0], GL_STATIC_DRAW);
+	
+		glEnableVertexAttribArray(0);
+	
+		glBindBuffer(GL_ARRAY_BUFFER, VertexBuffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(glm::vec3),               // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(mod, 0, points.size());
+	}
+	GL::CheckError();
+}
+	
+	
+
 
 };
+
+
 

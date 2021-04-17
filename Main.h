@@ -35,6 +35,20 @@ namespace VAR // global variables
 	float Mspeed{5}; // Mash speed
 	glm::vec3 Rotation(0.,0.,0.);
 	unsigned int Reflections{3};
+	
+	GLuint MeshVertexBuffer;
+	GLuint MeshIndexBuffer;
+	GLuint LaserVertexBuffer;
+	
+	std::vector<glm::vec3> box{
+		{-1,1,-1},{1,1,-1},{1,1,1},{-1,1,1},
+		{-1,-1,-1},{1,-1,-1},{1,-1,1},{-1,-1,1},
+	};
+	std::vector<unsigned int> boxIndex{
+		0,1,5,6,2,3,7,4,5,1,2,6,7,3,0,4
+	};
+	
+	std::vector<glm::vec3> Laser{{0,0,0},{1,1,0}};
 };
 namespace CTL // Controls
 {
@@ -63,15 +77,7 @@ public:
 	wxGLContext* context;
 	BasicGLPane(wxFrame* parent, int* args): wxGLCanvas(parent, wxID_ANY,  args, wxDefaultPosition, wxDefaultSize, 0, wxT("GLCanvas")) {};
 	bool Resized = false;
-	
-	std::vector<glm::vec3> box{
-		{-1,1,-1},{1,1,-1},{1,1,1},{-1,1,1},
-		{-1,-1,-1},{1,-1,-1},{1,-1,1},{-1,-1,1},
-	};
-	std::vector<unsigned int> boxIndex{
-		0,1,5,6,2,3,7,4,5,1,2,6,7,3,0,4
-	};
-	
+
 public:
 	void OnRender(wxPaintEvent& evt);
 	void OnSize(wxSizeEvent& evt);

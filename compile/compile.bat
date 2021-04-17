@@ -33,7 +33,7 @@ g++ %name%.cpp -g -lDbghelp -lglew32 -lopengl32  -lwxbase315u_gcc_custom -lwxmsw
 ::	exit
 ::)
 
-IF %ERRORLEVEL% NEQ 0 ( 
+if %ERRORLEVEL% NEQ 0 ( 
 	echo program return code: %ERRORLEVEL%
 	pause
 	exit
@@ -43,7 +43,9 @@ IF %ERRORLEVEL% NEQ 0 (
 cv2pdb exe\%name%.exe
 exe\%name%.exe
 
-set /p pause=" "
+echo program return code: %ERRORLEVEL%
+pause
+
 
 
 :: adding libraries:

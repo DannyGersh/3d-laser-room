@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "DebugLog.h"
-#include <wx/clrpicker.h>
-#include <wx/event.h>
+#include "GLfunctions.h"
 
 #define ID_LASER_COLOUR		2000
 #define ID_MESH_COLOUR		2001
@@ -11,59 +10,58 @@
 #define ID_MESH_SPEED		2005
 #define ID_REFLECTIONS		2006
 
-namespace SH
+namespace SH // shaders
 {
 	GLuint Vertex;
 	GLuint Fragment;
 	GLuint UniColor;
 };
-namespace PR
+namespace PR // programs
 {
 	GLuint Simple;
 	GLuint UniColorLaser;
 	GLuint UniColorMesh;
 };
-namespace DB
+namespace DB // DebugLog extension
 {
 	TypeCallback wxSimple = [](std::string str, const char* file, int line) { wxLogError(str.c_str()); };
 };
 
 
+namespace VAR // global variables
+{
+	glm::mat4 cam;
+	float Lspeed{5}; // Laser speed
+	float Mspeed{5}; // Mash speed
+	int Reflections{3};
+};
+namespace CTL // Controls
+{
+	wxColourPickerCtrl* LaserColour;
+	wxColourPickerCtrl* MeshColour;
+	wxSlider* LaserSlider;
+	wxSlider* MeshSlider;
+	wxTextCtrl* LaserRotation[3];
+	wxTextCtrl* LaserSPEED;
+	wxTextCtrl* MeshSPEED;
+	wxTextCtrl* Reflections;
+};
 
-class MyFrame : public wxFrame
+
+
+class MyApp : public wxApp
 {
 public:
-    MyFrame();
-	wxGLCanvas* canvas;
+    virtual bool OnInit();
+};
+
+
+class BasicGLPane : public wxGLCanvas
+{
+public:
 	wxGLContext* context;
-	wxBoxSizer* topsizer;
-	bool Resized;
-	
-	struct ControlVariables
-	{
-		glm::mat4 cam;
-		float Lspeed{5}; // Laser speed
-		float Mspeed{5}; // Mash speed
-		int Reflections{3};
-	} CTLV;
-	
-	
-	struct Control
-	{
-		wxColourPickerCtrl* LaserColour;
-		wxColourPickerCtrl* MeshColour;
-		wxSlider* LaserSlider;
-		wxSlider* MeshSlider;
-		wxTextCtrl* LaserRotation[3];
-		wxTextCtrl* LaserSPEED;
-		wxTextCtrl* MeshSPEED;
-		wxTextCtrl* Reflections;
-	} CTL;
-	struct Sizer
-	{
-		wxBoxSizer* Gui = new wxBoxSizer(wxVERTICAL);
-		wxBoxSizer* Main = new wxBoxSizer(wxHORIZONTAL);
-	} SIZER;
+	BasicGLPane(wxFrame* parent, int* args);
+	bool Resized = false;
 	
 	std::vector<glm::vec3> box{
 		{-1,1,-1},{1,1,-1},{1,1,1},{-1,1,1},
@@ -73,11 +71,26 @@ public:
 		0,1,5,6,2,3,7,4,5,1,2,6,7,3,0,4
 	};
 	
-private:
-    void OnExit(wxCommandEvent& event);
+public:
 	void OnRender(wxPaintEvent& evt);
 	void OnSize(wxSizeEvent& evt);
 	
+	DECLARE_EVENT_TABLE()
+};
+wxBEGIN_EVENT_TABLE(BasicGLPane, wxGLCanvas)
+EVT_PAINT(BasicGLPane::OnRender)
+EVT_SIZE(BasicGLPane::OnSize)
+wxEND_EVENT_TABLE()
+
+
+
+
+class MyFrame : public wxFrame
+{
+public:
+    MyFrame();
+	BasicGLPane* canvas;
+private:	
 	void OnLaserColour(wxColourPickerEvent& evt);
 	void OnLaserSlider(wxScrollEvent& evt);
 	void OnMeshColour(wxColourPickerEvent& evt);
@@ -86,30 +99,6 @@ private:
 	void OnLaserSPEED(wxCommandEvent& evt);
 	void OnMeshSPEED(wxCommandEvent& evt);
 	void OnReflections(wxCommandEvent& evt);
-	
-	wxDECLARE_EVENT_TABLE();
 };
 
-wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
-EVT_PAINT(MyFrame::OnRender)
-EVT_SIZE(MyFrame::OnSize)
-//EVT_COMMAND_ENTER(ID_MESH_SPEED, MyFrame::OnMeshSPEED)
-wxEND_EVENT_TABLE()
-
-
-
-
-class MyApp : public wxApp
-{
-public:
-    virtual bool OnInit();
-	MyFrame* frame;
-	void OnKeyDown(wxKeyEvent& evt);
-	
-private:
-	wxDECLARE_EVENT_TABLE();
-};
-wxBEGIN_EVENT_TABLE(MyApp, wxApp)
-EVT_KEY_DOWN(MyApp::OnKeyDown)
-wxEND_EVENT_TABLE()
 

@@ -46,13 +46,13 @@ namespace DB
 	void Log(std::string str, const char* file, int line) 
 	{
 		try { callback(str, file, line); } 
-		catch( ... ) { exit (EXIT_FAILURE); }
+		catch( ... ) { exit (30); }
 	}
 	#define Log(str) Log(str, __FILE__, __LINE__)
 	void LogF(TypeCallback func, std::string str, const char* file, int line) 
 	{
 		try { func(str, file, line); } 
-		catch( ... ) { exit (EXIT_FAILURE); }
+		catch( ... ) { exit (31); }
 	}
 	#define LogF(func, str) LogF(func, str, __FILE__, __LINE__)
 	
@@ -210,7 +210,7 @@ void DB::LogFT(TypeCallback func, std::string str, const char* file, int line)
 		std::string fin = str + "\n" + StackTrace::Get();
 		func(str, file, line); 
 	} 
-	catch( ... ) { exit (EXIT_FAILURE); }
+	catch( ... ) { exit (32); }
 }
 #define LogFT(func, str) LogFT(func, str, __FILE__, __LINE__)
 	
@@ -220,13 +220,13 @@ void DB::LogFT(TypeCallback func, std::string str, const char* file, int line)
 void DB::LogT(std::string str, const char* file, int line) 
 {
 	try { callback(str, file, line); } 
-	catch( ... ) { exit (EXIT_FAILURE); }
+	catch( ... ) { exit (33); }
 }
 #define LogT(str) LogT(str, __FILE__, __LINE__)
 void DB::LogFT(TypeCallback func, std::string str, const char* file, int line) 
 {
 	try { func(str, file, line); } 
-	catch( ... ) { exit (EXIT_FAILURE); }
+	catch( ... ) { exit (34); }
 }
 #define LogFT(func, str) LogFT(func, str, __FILE__, __LINE__)
 

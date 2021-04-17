@@ -41,6 +41,7 @@ GLuint CompileShader(const char * file_path, int shaderTYPE)
 	std::string ShaderCode;
 	std::ifstream File(file_path, std::ios::in);
 	
+	if(!File.good()) { DB::LogT("CompileShader() Failed, bad\\missing file"); };
 	assert(File.good());
 	while(File.good()) ShaderCode += File.get();
 	

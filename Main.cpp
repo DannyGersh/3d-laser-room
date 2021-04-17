@@ -167,10 +167,6 @@ MyFrame::MyFrame()
 	Show();
 }
 
-BasicGLPane::BasicGLPane(wxFrame* parent, int* args): wxGLCanvas(parent, wxID_ANY,  args, wxDefaultPosition, wxDefaultSize, 0, wxT("GLCanvas"))
-{
-
-}
 void BasicGLPane::OnRender(wxPaintEvent& evt)
 {
 	// init paint event_callback
@@ -190,6 +186,13 @@ void BasicGLPane::OnRender(wxPaintEvent& evt)
 	
 	// Main
 	{
+		VAR::cam = glm::mat4(1);
+		GL::Scale(PR::UniColorLaser, VAR::cam, {.5,.5,.5}, "trans");
+		GL::Rotate(PR::UniColorMesh, VAR::cam, VAR::Rotation.x, glm::vec3(1,0,0), "trans");
+		GL::Rotate(PR::UniColorMesh, VAR::cam, VAR::Rotation.y, glm::vec3(0,1,0), "trans");
+		GL::Rotate(PR::UniColorMesh, VAR::cam, VAR::Rotation.z, glm::vec3(0,0,1), "trans");
+		GL::SetUniform(PR::UniColorLaser, VAR::cam, "trans");
+					
 		glClearColor(0, 0, 0, 1 );
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -210,6 +213,66 @@ void BasicGLPane::OnSize(wxSizeEvent& evt)
 	Resized = true;
 	Refresh();
 	evt.Skip();
+}
+void BasicGLPane::OnKeyDown(wxKeyEvent& evt)
+{
+	wxChar uc = evt.GetUnicodeKey();
+	if (uc != WXK_NONE)
+	{
+		if ( uc >= 32 )
+		{	
+			switch(uc)
+			{
+				case 'A': 
+				{
+					VAR::Rotation.y += VAR::Mspeed;
+					Refresh();
+					evt.Skip();
+					break;
+				};
+				case 'D': 
+				{
+					VAR::Rotation.y -= VAR::Mspeed;
+					Refresh();
+					evt.Skip();
+					break;
+				};
+				case 'W': 
+				{
+					VAR::Rotation.x += VAR::Mspeed;
+					Refresh();
+					evt.Skip();
+					break;
+				};
+				case 'S': 
+				{
+					VAR::Rotation.x -= VAR::Mspeed;
+					Refresh();
+					evt.Skip();
+					break;
+				};
+				default:
+					evt.Skip();
+					return;
+			}
+		}
+		else
+		{
+			switch (evt.GetKeyCode())
+			{
+				//case WXK_LEFT:
+				//case WXK_RIGHT:
+				//	break;
+				
+				//case WXK_RETURN:
+				//	exit(0);
+				default:
+					evt.Skip();
+					return;
+			}
+		}
+	}
+
 }
 
 

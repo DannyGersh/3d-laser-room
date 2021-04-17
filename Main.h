@@ -33,7 +33,8 @@ namespace VAR // global variables
 	glm::mat4 cam;
 	float Lspeed{5}; // Laser speed
 	float Mspeed{5}; // Mash speed
-	int Reflections{3};
+	glm::vec3 Rotation(0.,0.,0.);
+	unsigned int Reflections{3};
 };
 namespace CTL // Controls
 {
@@ -60,7 +61,7 @@ class BasicGLPane : public wxGLCanvas
 {
 public:
 	wxGLContext* context;
-	BasicGLPane(wxFrame* parent, int* args);
+	BasicGLPane(wxFrame* parent, int* args): wxGLCanvas(parent, wxID_ANY,  args, wxDefaultPosition, wxDefaultSize, 0, wxT("GLCanvas")) {};
 	bool Resized = false;
 	
 	std::vector<glm::vec3> box{
@@ -74,12 +75,14 @@ public:
 public:
 	void OnRender(wxPaintEvent& evt);
 	void OnSize(wxSizeEvent& evt);
+	void OnKeyDown(wxKeyEvent& evt);
 	
 	DECLARE_EVENT_TABLE()
 };
 wxBEGIN_EVENT_TABLE(BasicGLPane, wxGLCanvas)
 EVT_PAINT(BasicGLPane::OnRender)
 EVT_SIZE(BasicGLPane::OnSize)
+EVT_KEY_DOWN(BasicGLPane::OnKeyDown)
 wxEND_EVENT_TABLE()
 
 

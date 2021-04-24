@@ -1,2 +1,3 @@
-to compile mkdir named exe and populate with the wxWidgets dll files.
-change compile\compile.bat to include libs as needed.
+An attempt to simulate the path a laser ray takes inside a room filled with mirrors.
+- dependent on wxWidgets and glew.
+- link with opengl32, glew32, wxWidgets libraries and compile Main.cpp.

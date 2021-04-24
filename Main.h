@@ -1,26 +1,5 @@
 #pragma once
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <ctime>
-
-#include "GL/glew.h"
-#include <wx/wx.h>
-#include "wx/glcanvas.h"
-#include "wx/clrpicker.h"
-#include "wx/slider.h"
-#include <wx/regex.h>
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "OBJfile.h"
-
-#include "rayTracer.h"
-#include "GLfunctions.h"
-
-#include "makeMP4video.h"
+#include "pch.h"
 
 #define ID_LASER_COLOUR		2000
 #define ID_MESH_COLOUR		2001
@@ -84,7 +63,6 @@ public:
 
 	wxTextCtrl* GLversion;
 	wxTextCtrl* freeTEXT;
-	wxTextCtrl* bigTEXT;
 
 	wxColourPickerCtrl* laserCOLOUR;
 	wxSlider* laserSlider;
@@ -95,8 +73,6 @@ public:
 	wxTextCtrl* reflections;
 	wxTextCtrl* laserSPEED;
 
-	wxButton* recordGIFF;
-	bool ISrecording = false;
 
 private:
 	void OnExit(wxCommandEvent& event);
@@ -104,10 +80,8 @@ private:
 	void ONmeshCOLOUR(wxColourPickerEvent& event);
 	void ONlaserSlider(wxScrollEvent& event);
 	void ONmeshSlider(wxScrollEvent& event);
-	void ONlaserROTATION(wxCommandEvent& event);
 	void ONreflections(wxCommandEvent& event);
 	void ONlaserSPEED(wxCommandEvent& event);
-	void ONrecordGIFF(wxCommandEvent& event);
 
 };
 
@@ -139,9 +113,9 @@ public:
 	mat4 camera;
 
 	// C = camera, L = lazer
-	int reflections = 500;
+	int reflections = 4;
 	float Cspeed = 5.0f;
-	float Lspeed = 0.01f;
+	float Lspeed = 1.0f;
 	vec3 Crotate = { 0.0f, 0.0f, 0.0f };
 	vec3 Lrotate = { 0.0f, 0.0f, 0.0f };
 	float CscaleX{ .5 }, CscaleY{ .5 }, CscaleZ{ .5 };

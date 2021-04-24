@@ -100,22 +100,10 @@ Frame::Frame()
 			Bind(wxEVT_TEXT_ENTER, &Frame::ONreflections, this, ID_REFLECTIONS);
 		}
 
-		// record
-		{
-			recordGIFF = new wxButton(this, ID_RECORD_GIFF, "Record");
-			recordGIFF->SetBackgroundColour({ 200,200,200 });
-			GUIsizer->Add(recordGIFF);
-			GUIsizer->AddSpacer(10);
-
-			Bind(wxEVT_BUTTON, &Frame::ONrecordGIFF, this, ID_RECORD_GIFF);
-		}
-
-		bigTEXT = new wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxSize(150, 0), wxTE_MULTILINE);
-		GUIsizer->Add(bigTEXT, 1, 1);
-		bigTEXT->SetBackgroundColour({ 200,200,200 });
-
 		GLversion = new wxTextCtrl(this, 0, glGetString(GL_VERSION));
 		freeTEXT = new wxTextCtrl(this, 0, "POOP");
+
+		GUIsizer->Add(new wxStaticText(this, wxID_ANY, "Use arrow keys and w,a,s,d keys"));
 
 		GLversion->SetBackgroundColour({ 150,150,150 });
 		freeTEXT->SetBackgroundColour({ 150,150,150 });
@@ -175,11 +163,6 @@ void Frame::ONmeshSlider(wxScrollEvent& event)
 	canvas->Mcolour.w = (float)meshSlider->GetValue() / 255;
 	canvas->Refresh();
 }
-
-void Frame::ONlaserROTATION(wxCommandEvent& event)
-{
-
-}
 void Frame::ONreflections(wxCommandEvent& event)
 {
 	int _reflections = stoi(string(reflections->GetValue()));
@@ -190,17 +173,6 @@ void Frame::ONlaserSPEED(wxCommandEvent& event)
 {
 	canvas->Lspeed = atof(laserSPEED->GetValue().c_str());
 	canvas->Refresh();
-}
-void Frame::ONrecordGIFF(wxCommandEvent& event)
-{
-	if (!ISrecording) {
-		ISrecording = true;
-		recordGIFF->SetBackgroundColour({ 255,50,50 });
-	}
-	else {
-		ISrecording = false;
-		recordGIFF->SetBackgroundColour({ 200,200,200 });
-	}
 }
 
 
@@ -356,22 +328,6 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		lines.clear();
 	}
 
-	//qq(Lrotate.x); qq(Lrotate.y);
-
-	if (frame->ISrecording)
-	{
-		//wxSize s = GetSize();
-		//BYTE* r = new BYTE[s.x * s.y];
-		//BYTE* g = new BYTE[s.x * s.y];
-		//BYTE* b = new BYTE[s.x * s.y];
-		//glReadPixels(0, 0, s.x, s.y, GL_RED, GL_UNSIGNED_BYTE, r);
-		//glReadPixels(0, 0, s.x, s.y, GL_GREEN, GL_UNSIGNED_BYTE, g);
-		//glReadPixels(0, 0, s.x, s.y, GL_BLUE, GL_UNSIGNED_BYTE, b);
-		//
-		//makeMP4video("c:/danny/poop.mp4", s.x, s.y, r, g, b);
-		//GLerror();
-	}
-
 	// swap buffor, cleanup
 	{
 		glFlush();
@@ -387,7 +343,6 @@ void GLcanvas::OnPaint(wxPaintEvent& WXUNUSED(event))
 		clock_t end = clock();
 		double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
 		frame->freeTEXT->SetValue(std::to_string(elapsed_secs));
-		frame->bigTEXT->SetValue(str);
 		str = "";
 	}
 

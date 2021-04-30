@@ -1,0 +1,9 @@
+[submodule "depend/wxWidgets"]
+	path = depend/wxWidgets
+	url = https://github.com/wxWidgets/wxWidgets.git
+[submodule "depend/glew-cmake"]
+	path = depend/glew-cmake
+	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "depend/glm"]
+	path = depend/glm
+	url = https://github.com/g-truc/glm.git

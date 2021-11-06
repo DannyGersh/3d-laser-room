@@ -1,7 +1,5 @@
 *.gch
 *.exe
 *.dll
-exe/
-depend/
-!3rd/
-compile/
+result/
+

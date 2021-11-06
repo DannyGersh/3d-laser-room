@@ -1,19 +1,11 @@
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <ctime>
-
-#include "GL/glew.h"
-#include <wx/wx.h>
-#include "wx/glcanvas.h"
-#include "wx/clrpicker.h"
-#include "wx/slider.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "OBJfile.h"
-
-#include "rayTracer.h"
-#include "GLfunctions.h"
+#ifndef finInclude
+		
+	#include "wx/wx.h"
+	#include "wx/glcanvas.h"
+	
+	#include <iostream>
+	#include <string>
+	#include <fstream>
+	
+#define finInclude
+#endif

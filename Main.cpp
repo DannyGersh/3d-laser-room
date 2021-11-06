@@ -19,20 +19,36 @@ MyFrame::MyFrame()
 		context->SetCurrent(*canvas);
 	}
 
-	topsizer = new wxBoxSizer( wxVERTICAL );
+	wxBoxSizer* sizerMain = new wxBoxSizer( wxHORIZONTAL );
 	
-	//topsizer->Add(
-	//	canvas,
-    //    1,            // make vertically stretchable
-    //    wxEXPAND |    // make horizontally stretchable
-    //    wxALL,        //   and make border all around
-    //    10 ); 
+	wxScrolledWindow* guiLaserWindow = new wxScrolledWindow(this, wxNewId(), wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
+	wxBoxSizer* sizerGui = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* sizerGui_lasers = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* sizerGui_main = new wxBoxSizer(wxVERTICAL);
 	
-	topsizer->Add(new wxTextCtrl(this, 4545845, "x", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER), 1, wxALL, 2);
+	sizerGui->Add(sizerGui_lasers, 1, wxEXPAND | wxALL, 10);
+	sizerGui->Add(new wxButton(this, wxID_ANY, "poop"), 1, wxEXPAND | wxALL, 10);
+	sizerGui->Add(sizerGui_main, 1, wxEXPAND | wxALL, 10);
 	
-	SetSizerAndFit(topsizer);
-
-	Maximize();
+	guiLaserWindow->SetSizerAndFit(sizerGui_lasers);
+	guiLaserWindow->SetScrollRate(5,5);
+	//sizerGui_lasers->FitInside(guiLaserWindow);
+	
+	sizerMain->Add(canvas, 1, wxEXPAND | wxALL, 10 ); 
+	sizerMain->Add(guiLaserWindow, 1, wxEXPAND | wxRIGHT | wxUP | wxDOWN | wxBORDER_DOUBLE , 10 );	
+	//sizerMain->Add(guiLaserWindow, wxSizerFlags().Expand().Border(wxALL, 10));
+	
+	LaserUnitGui* l1 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	LaserUnitGui* l2 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	LaserUnitGui* l3 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	LaserUnitGui* l4 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	LaserUnitGui* l5 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	
+	guiLaserWindow->FitInside();
+	sizerGui_lasers->FitInside(guiLaserWindow);
+	
+	SetSizerAndFit(sizerMain);
+	SetSize(100,100,500,500);
 	Show();
 }
 	

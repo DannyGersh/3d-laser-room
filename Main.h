@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "gui.h"
 
 class MyApp : public wxApp
 {

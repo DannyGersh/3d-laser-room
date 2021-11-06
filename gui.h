@@ -8,12 +8,12 @@ struct LaserUnitGui
 
 	wxWindow* unitWindow;
 	
-	LaserUnitGui(wxScrolledWindow* guiWindow, wxBoxSizer* windowSizerGui)
+	LaserUnitGui(wxWindow* parent, wxBoxSizer* guiWndSizer, wxBoxSizer* sizerGui=NULL)
 	{
 		idWindow = wxNewId(); idColour = wxNewId(); idSlider = wxNewId();
 		idDegree[0] = wxNewId(); idDegree[1] = wxNewId(); idDegree[2] = wxNewId();
 		
-		unitWindow = new wxWindow(guiWindow, idWindow, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
+		unitWindow = new wxWindow(parent, idWindow, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 		wxColourPickerCtrl* picker = new wxColourPickerCtrl(unitWindow, idColour);
 		wxSlider* slider = new wxSlider(unitWindow, idSlider, 255, 0, 255);
 		picker->SetColour(wxColour(colour[0] * 255, colour[1] * 255, colour[2] * 255));
@@ -36,8 +36,8 @@ struct LaserUnitGui
 		
 		unitWindow->SetSizerAndFit(unitWindowSizer);
 
-		windowSizerGui->Add(unitWindow);
-		windowSizerGui->AddSpacer(10);
+		if(!sizerGui) { guiWndSizer->Add(unitWindow); guiWndSizer->AddSpacer(10); }
+		else { sizerGui->Add(unitWindow, 0, wxALL | wxCENTER, 5); sizerGui->AddSpacer(10); }
 	}
 	~LaserUnitGui()
 	{
@@ -70,10 +70,9 @@ struct Gui
 		guiLaserWindow->SetScrollRate(5,5);
 	
 		LaserUnitGui* l1 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-		LaserUnitGui* l2 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-		LaserUnitGui* l3 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-		LaserUnitGui* l4 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-		LaserUnitGui* l5 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+		sizerGui->AddSpacer(20);
+		sizerGui->Add(new wxStaticText(guiWindow, wxID_ANY, "Master"), 0, wxEXPAND | wxCENTER, 10);
+		LaserUnitGui* l3 = new LaserUnitGui(guiWindow, sizerGui_lasers, sizerGui);
 		
 		auto size1 = l1->unitWindow->GetSize();
 		auto size2 = guiWindow->GetSize();

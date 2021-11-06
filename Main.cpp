@@ -19,37 +19,34 @@ MyFrame::MyFrame()
 		context->SetCurrent(*canvas);
 	}
 
-	wxBoxSizer* sizerMain = new wxBoxSizer( wxHORIZONTAL );
+	//wxBoxSizer* sizerMain = new wxBoxSizer( wxHORIZONTAL );
+	//wxBoxSizer* sizerGui = new wxBoxSizer(wxVERTICAL);
+	//wxBoxSizer* sizerGui_lasers = new wxBoxSizer(wxVERTICAL);
+	//wxBoxSizer* sizerGui_master = new wxBoxSizer(wxVERTICAL);
+	//
+	//wxScrolledWindow* guiLaserWindow = new wxScrolledWindow(this, wxNewId(), wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
+	//
+	//
+	//sizerMain->Add(canvas, 1, wxEXPAND | wxALL, 10 ); 
+	//sizerMain->Add(sizerGui, 1, wxEXPAND | wxRIGHT | wxUP | wxDOWN | wxBORDER_DOUBLE , 10 );	
+	//
+	//sizerGui->Add(guiLaserWindow, 1, wxEXPAND | wxALL, 10);
+	//sizerGui->Add(new wxButton(this, wxID_ANY, "poop"), 1, wxEXPAND | wxALL, 10);
+	//sizerGui->Add(sizerGui_master, 1, wxEXPAND | wxALL, 10);
+	//
+	//guiLaserWindow->SetSizerAndFit(sizerGui_lasers);
+	//guiLaserWindow->SetScrollRate(5,5);
+	//
+	//LaserUnitGui* l1 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	//LaserUnitGui* l2 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	//LaserUnitGui* l3 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	//LaserUnitGui* l4 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	//LaserUnitGui* l5 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
+	//
+	//SetSizerAndFit(sizerMain);
+	//Show();
 	
-	wxScrolledWindow* guiLaserWindow = new wxScrolledWindow(this, wxNewId(), wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
-	wxBoxSizer* sizerGui = new wxBoxSizer(wxVERTICAL);
-	wxBoxSizer* sizerGui_lasers = new wxBoxSizer(wxVERTICAL);
-	wxBoxSizer* sizerGui_main = new wxBoxSizer(wxVERTICAL);
-	
-	sizerGui->Add(sizerGui_lasers, 1, wxEXPAND | wxALL, 10);
-	sizerGui->Add(new wxButton(this, wxID_ANY, "poop"), 1, wxEXPAND | wxALL, 10);
-	sizerGui->Add(sizerGui_main, 1, wxEXPAND | wxALL, 10);
-	
-	guiLaserWindow->SetSizerAndFit(sizerGui_lasers);
-	guiLaserWindow->SetScrollRate(5,5);
-	//sizerGui_lasers->FitInside(guiLaserWindow);
-	
-	sizerMain->Add(canvas, 1, wxEXPAND | wxALL, 10 ); 
-	sizerMain->Add(guiLaserWindow, 1, wxEXPAND | wxRIGHT | wxUP | wxDOWN | wxBORDER_DOUBLE , 10 );	
-	//sizerMain->Add(guiLaserWindow, wxSizerFlags().Expand().Border(wxALL, 10));
-	
-	LaserUnitGui* l1 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-	LaserUnitGui* l2 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-	LaserUnitGui* l3 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-	LaserUnitGui* l4 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-	LaserUnitGui* l5 = new LaserUnitGui(guiLaserWindow, sizerGui_lasers);	
-	
-	guiLaserWindow->FitInside();
-	sizerGui_lasers->FitInside(guiLaserWindow);
-	
-	SetSizerAndFit(sizerMain);
-	SetSize(100,100,500,500);
-	Show();
+	Gui* gui = new Gui(this, canvas);
 }
 	
 void MyFrame::render(wxPaintEvent& evt)

@@ -1,5 +1,5 @@
-#include "pch.h"
-#include "gui.h"
+#include "src/gui.h"
+//#include "src/openGL.h"
 
 class MyApp : public wxApp
 {
@@ -13,7 +13,6 @@ public:
     MyFrame();
 	wxGLCanvas* canvas;
 	wxGLContext* context;
-	wxBoxSizer* topsizer;
 private:
     void OnExit(wxCommandEvent& event);
 	void render(wxPaintEvent& evt);

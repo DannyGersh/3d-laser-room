@@ -5,11 +5,15 @@ GLuint compileSHADER(const char * file_path, int shaderTYPE)
 
 	GLuint ShaderID = glCreateShader(shaderTYPE);
 	std::string data;
-	std::ifstream file(file_path, std::ios::in);
-	
+	std::ifstream file(file_path, std::ios::in | std::ios::ate);
+
 	if (file.is_open()) 
 	{
-		while(file.good()) data << file.get();
+		int fileSize = file.tellg();
+		data.resize(fileSize);
+		file.seekg(std::ios_base::beg);
+	
+		for( int i=0 ; i<fileSize ; i++ ) data[i] = file.get();
 		file.close();
 	}
 	

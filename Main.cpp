@@ -1,6 +1,11 @@
 #include "Main.h"
 
+#ifdef NDEBUG 
 wxIMPLEMENT_APP(MyApp);
+#else
+wxIMPLEMENT_APP_CONSOLE(MyApp);
+#endif
+
 bool MyApp::OnInit()
 {
     MyFrame *frame = new MyFrame();
@@ -49,14 +54,15 @@ void MyFrame::render(wxPaintEvent& evt)
 		float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
 		glClearColor(r, g, b, 1.0f );
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glCreateShader(0);
 	}
-	
-	
-	
+
 	glFlush();
     canvas->SwapBuffers();
+	
+	std::cout<<"POOP\n";
+	std::cout<<"POOP\n";
+	std::cout<<"POOP\n";
+	std::cout<<"POOP\n";
 }
-
 
 

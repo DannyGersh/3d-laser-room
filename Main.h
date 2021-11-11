@@ -1,5 +1,5 @@
 #include "src/gui.h"
-//#include "src/openGL.h"
+#include "src/openGL.h"
 
 class MyApp : public wxApp
 {

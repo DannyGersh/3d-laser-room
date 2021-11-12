@@ -19,7 +19,8 @@ string(REPLACE "/lib/cmake/glew" "" glew_dir2 ${GLEW_DIR})
 target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir2}/include)
 target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
 
-target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>") 
+# in case release, compiles as desktop app. debug gets a console.
+target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
 
 # precompile pch.h
 target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)

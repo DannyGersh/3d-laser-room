@@ -33,6 +33,8 @@ MyFrame::MyFrame()
 	
 	}
 	
+	compileSHADER("res/shaders/vertex.shader", GL_VERTEX_SHADER);
+	
 	Gui* gui = new Gui(this, canvas);
 	
 	{
@@ -58,11 +60,6 @@ void MyFrame::render(wxPaintEvent& evt)
 
 	glFlush();
     canvas->SwapBuffers();
-	
-	std::cout<<"POOP\n";
-	std::cout<<"POOP\n";
-	std::cout<<"POOP\n";
-	std::cout<<"POOP\n";
 }
 
 

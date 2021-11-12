@@ -1,4 +1,5 @@
 #include "pch.h"
+
 GLuint compileSHADER(const char * file_path, int shaderTYPE)
 {
 	// shaderTYPE:  GL_VERTEX_SHADER , GL_FRAGMENT_SHADER
@@ -6,13 +7,13 @@ GLuint compileSHADER(const char * file_path, int shaderTYPE)
 	GLuint ShaderID = glCreateShader(shaderTYPE);
 	std::string data;
 	std::ifstream file(file_path, std::ios::in | std::ios::ate);
-
+	
 	if (file.is_open()) 
 	{
 		int fileSize = file.tellg();
 		data.resize(fileSize);
-		file.seekg(std::ios_base::beg);
-	
+		file.seekg(0, file.beg);
+		
 		for( int i=0 ; i<fileSize ; i++ ) data[i] = file.get();
 		file.close();
 	}
@@ -22,19 +23,19 @@ GLuint compileSHADER(const char * file_path, int shaderTYPE)
 	glCompileShader(ShaderID);
 	return ShaderID;
 }
-//void linkPROGRAM(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
-//{
-//	glAttachShader(programID, vectSHADER);
-//	glAttachShader(programID, fragSHADER);
-//	glLinkProgram(programID);
-//
-//	glDetachShader(programID, vectSHADER);
-//	glDetachShader(programID, fragSHADER);
-//
-//	glUseProgram(programID);
-//	// glDeleteShader(vert);
-//	// glDeleteShader(frag);
-//}
+void linkPROGRAM(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
+{
+	glAttachShader(programID, vectSHADER);
+	glAttachShader(programID, fragSHADER);
+	glLinkProgram(programID);
+
+	glDetachShader(programID, vectSHADER);
+	glDetachShader(programID, fragSHADER);
+
+	glUseProgram(programID);
+	// glDeleteShader(vert);
+	// glDeleteShader(frag);
+}
 //void sendUNIFORMdata(GLuint programID, mat4 mat)
 //{
 //	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader

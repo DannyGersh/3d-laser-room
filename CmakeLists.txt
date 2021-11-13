@@ -1,8 +1,9 @@
 project(3d-laser-room)
 cmake_minimum_required(VERSION 2.8)
-aux_source_directory(. SRC_LIST)
+#aux_source_directory(. SRC_LIST)
 
-add_executable(${PROJECT_NAME} ${SRC_LIST})
+add_executable(${PROJECT_NAME} Main.cpp)
+#add_executable(${PROJECT_NAME} ${SRC_LIST})
 
 # wxwidgets
 find_package(wxWidgets REQUIRED COMPONENTS core base gl)
@@ -20,10 +21,14 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir2}/include)
 target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
 
 # in case release, compiles as desktop app. debug gets a console.
-target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
+#if(WIN32)
+#	target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
+#endif(WIN32)
+#
 
 # precompile pch.h
 target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)
+
 
 
 

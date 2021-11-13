@@ -34,7 +34,7 @@ MyFrame::MyFrame()
 	}
 	
 	compileSHADER("res/shaders/vertex.shader", GL_VERTEX_SHADER);
-	
+	//
 	Gui* gui = new Gui(this, canvas);
 	
 	{

@@ -1,1 +1,4 @@
-/depend/glm
+*.gch
+*.exe
+*.dll
+depend/glm/

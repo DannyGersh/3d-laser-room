@@ -1,14 +1,21 @@
 #include "pch.h"
+#include "depend/debug.h"
 
-GLuint compileSHADER(const char * file_path, int shaderTYPE)
+
+namespace shad
+{
+	
+GLuint compile(std::wstring file_path, int shaderTYPE)
 {
 	// shaderTYPE:  GL_VERTEX_SHADER , GL_FRAGMENT_SHADER
 
 	GLuint ShaderID = glCreateShader(shaderTYPE);
 	std::string data;
-	std::ifstream file(file_path, std::ios::in | std::ios::ate);
+	std::ifstream file(file_path.c_str(), std::ios::in | std::ios::ate);
 	
-	if (file.is_open()) 
+	if( !file ) { debug::raise({ std::wstring(L"File not found: ") + file_path, {DBINFO}, debug::warning }); };
+	
+	if( file.is_open() )
 	{
 		int fileSize = file.tellg();
 		data.resize(fileSize);
@@ -23,7 +30,14 @@ GLuint compileSHADER(const char * file_path, int shaderTYPE)
 	glCompileShader(ShaderID);
 	return ShaderID;
 }
-void linkPROGRAM(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
+
+}
+
+
+namespace prog
+{
+	
+void link(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
 {
 	glAttachShader(programID, vectSHADER);
 	glAttachShader(programID, fragSHADER);
@@ -36,13 +50,11 @@ void linkPROGRAM(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
 	// glDeleteShader(vert);
 	// glDeleteShader(frag);
 }
-//void sendUNIFORMdata(GLuint programID, mat4 mat)
-//{
-//	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
-//	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
-//}
-//void set_uniCOLOR(GLuint _uniCOLOR_programID, glm::vec4 color)
-//{
-//	GLint uniTrans = glGetUniformLocation(_uniCOLOR_programID, "inCOLOR");
-//	glUniform4fv(uniTrans, 1, &color[0]);
-//}
+
+}
+
+void UniformData(GLuint programID, glm::mat4 mat)
+{
+	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
+	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
+}

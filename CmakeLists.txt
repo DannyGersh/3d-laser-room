@@ -1,30 +1,63 @@
+# if cmake is having trouble finding dependencies,
+# set wxRoot to the installation dir of wxWidgets on your system,
+# and glewRoot as well.
+# you may have to tweak this file, because some paths may
+# change on different installations.
+# 
+# for MinGW builds:
+# cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=<Debug/release ... etk> -B <target dir>
+# for msvc build:
+# cmake -B <target dir> --config <Debug/release ... etk>
+
+
 project(3d-laser-room)
 cmake_minimum_required(VERSION 2.8)
-#aux_source_directory(. SRC_LIST)
+aux_source_directory(. SRC_LIST)
 
-add_executable(${PROJECT_NAME} Main.cpp)
-#add_executable(${PROJECT_NAME} ${SRC_LIST})
+add_executable(${PROJECT_NAME} ${SRC_LIST})
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+find_package(OpenGL REQUIRED)
+target_link_libraries(${PROJECT_NAME} opengl32)
 
 # wxwidgets
-find_package(wxWidgets REQUIRED COMPONENTS core base gl)
-include(${wxWidgets_USE_FILE})	
-target_link_libraries(${PROJECT_NAME} ${wxWidgets_LIBRARIES})
+find_package(wxWidgets COMPONENTS core base gl)
+if(wxWidgets_FOUND)
+	include(${wxWidgets_USE_FILE})	
+	target_link_libraries(${PROJECT_NAME} ${wxWidgets_LIBRARIES})
+else()
+	file(GLOB wxlib "${wxRoot}/lib/*.a")
+	file(GLOB glewlib "${glewRoot}/lib/*.a")
+	
+	include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include")
+	target_link_libraries(${PROJECT_NAME} ${wxlib})
+	
+	target_include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/lib/wx/include/msw-unicode-3.1")
+	target_include_directories(${PROJECT_NAME} PRIVATE "C:/danny/3d/3d-laser-room")
+endif(wxWidgets_FOUND)
+
 
 # glew
 # glew doesn't play well with cmake, this is a workaround. 
-# works on win10, Visual Studio 16 2019 compiler, cmake version 3.16.3.
+# works on win10, Visual Studio 16 2019 compiler and minGW compiler, cmake version 3.16.3.
 # it just gets the glew installd path from ${GLEW_DIR} and uses it afterward.
-find_package(glew REQUIRED)
-set(glew_dir2 ${GLEW_DIR})
-string(REPLACE "/lib/cmake/glew" "" glew_dir2 ${GLEW_DIR})
-target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir2}/include)
-target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
+find_package(glew)
+if(GLEW_FOUND)
+	set(glew_dir2 ${GLEW_DIR})
+	string(REPLACE "/lib/cmake/glew" "" glew_dir2 ${GLEW_DIR})
+	target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir2}/include)
+	target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
+else()
+	include_directories(${PROJECT_NAME} PRIVATE "${glewRoot}/include")
+	target_link_libraries(${PROJECT_NAME} ${glewlib})
+endif(GLEW_FOUND)
+
 
 # in case release, compiles as desktop app. debug gets a console.
-#if(WIN32)
-#	target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
-#endif(WIN32)
-#
+if(WIN32)
+	target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
+endif(WIN32)
+
 
 # precompile pch.h
 target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)

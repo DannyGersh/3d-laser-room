@@ -11,9 +11,14 @@
 	#include <fstream>
 	#include <iostream>
 	#include <string>
+	#include <filesystem>
+	#include <sstream>
 	
 	#include "depend/OBJ_Loader.h"
 	
+	#include "depend/glm/gtc/matrix_transform.hpp"
+	#include "depend/glm/gtc/type_ptr.hpp"
+
 	
 	#define finInclude
 	

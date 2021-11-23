@@ -1,4 +1,5 @@
 #include "Main.h"
+using namespace std;
 
 #ifdef NDEBUG 
 wxIMPLEMENT_APP(MyApp);
@@ -8,10 +9,45 @@ wxIMPLEMENT_APP_CONSOLE(MyApp);
 
 bool MyApp::OnInit()
 {
+	debug::db = [](debug::Data d) 
+	{ 
+		std::wcout<<d.msg<<'\n';
+		if( d.level == debug::kritical ) exit(-1); 
+	};
+
+
+	// get paths
+	{
+		
+	std::wstring argv0 = static_cast<std::wstring>(this->argv[0]);
+	
+	dir::exe = fs::directory_entry( fs::path(argv0).parent_path() );
+	if( ! dir::exe.exists() )
+		debug::db({ std::wstring(L"Cant find root directorie: ") + dir::exe.path().generic_wstring() + L"\n", {DBINFO}, debug::kritical });
+	
+	dir::res = fs::directory_entry( (dir::exe / L"res") );
+	if( !dir::res.exists() )
+		debug::db({ std::wstring(L"Cant find directorie: " + dir::res.path().generic_wstring() + L"\n"), {DBINFO}, debug::kritical });
+	
+	dir::shaders = fs::directory_entry(dir::exe / L"res/shaders");
+	if( ! dir::shaders.exists() )
+		debug::db({ std::wstring(L"Cant find directorie: " + dir::shaders.path().generic_wstring() + L"\n"), {DBINFO}, debug::kritical });
+	
+	file::box = (dir::res / L"box.obj").generic_wstring();
+	if( ! (fs::directory_entry(file::box).exists() ) )
+		debug::db({ std::wstring(L"Cant find file: " + file::box + L"\n"), {DBINFO}, debug::kritical });
+	
+	file::vertex = (dir::shaders / L"vertex.shader").generic_wstring();
+	file::unicolor_fragment = (dir::shaders / L"unicolor_fragment.shader").generic_wstring();
+	
+	}
+	
+	
     MyFrame *frame = new MyFrame();
     frame->Show(true);
     return true;
 }
+
 MyFrame::MyFrame()
     : wxFrame(NULL, wxID_ANY, "wx_gl")
 {
@@ -25,23 +61,37 @@ MyFrame::MyFrame()
 		GLenum err = glewInit();
 		if (GLEW_OK != err)
 		{
-			std::string errStr1 = "Could not initialize glew:\n";
-			std::string errStr2 = errStr1 + reinterpret_cast<const char*>(glewGetErrorString(err));
-			wxMessageBox(errStr2 , "Error", wxICON_ERROR | wxOK);
+			std::wstring errStr1 = L"Could not initialize glew:\n";
+			std::wstring errStr2 = errStr1 + reinterpret_cast<const char*>(glewGetErrorString(err)) + L"\n";
+			//wxMessageBox(errStr2 , "Error", wxICON_ERROR | wxOK);
+			debug::db({ std::wstring(errStr2), {DBINFO}, debug::kritical });
+
 			exit(-1);
 		}
 	
 	}
 	
-	compileSHADER("res/shaders/vertex.shader", GL_VERTEX_SHADER);
-	//
-	Gui* gui = new Gui(this, canvas);
+	// load obj file
+	// not using paths from dir:: because OBJ_Loader.h does not use wstring, and might not find the file.
+	objl::Loader file;
+	file.LoadFile("res/box.obj");
 	
+	// openGL
 	{
-		objl::Loader file;
-		file.LoadFile("res/box.obj");
+		shad::vertex = shad::compile(file::vertex, GL_VERTEX_SHADER);
+		shad::unicolorFrag = shad::compile(file::unicolor_fragment, GL_FRAGMENT_SHADER);
+		
+		//debug::Data a = debug::get();
+		
+		if( debug::get() ) std::wcout<<debug::last.msg;
+		
+		prog::unicolor = glCreateProgram();
+		prog::link(prog::unicolor, shad::vertex, shad::unicolorFrag);
+		glUseProgram(prog::unicolor);
 	}
-	
+
+	Gui* gui = new Gui(this, canvas);
+
 }
 	
 void MyFrame::render(wxPaintEvent& evt)

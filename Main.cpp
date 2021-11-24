@@ -25,20 +25,20 @@ bool MyApp::OnInit()
 	if( ! dir::exe.exists() )
 		debug::db({ std::wstring(L"Cant find root directorie: ") + dir::exe.path().generic_wstring() + L"\n", {DBINFO}, debug::kritical });
 	
-	dir::res = fs::directory_entry( (dir::exe / L"res") );
+	dir::res = fs::directory_entry( dir::exe.path() / L"res" );
 	if( !dir::res.exists() )
 		debug::db({ std::wstring(L"Cant find directorie: " + dir::res.path().generic_wstring() + L"\n"), {DBINFO}, debug::kritical });
 	
-	dir::shaders = fs::directory_entry(dir::exe / L"res/shaders");
+	dir::shaders = fs::directory_entry(dir::exe.path() / L"res/shaders");
 	if( ! dir::shaders.exists() )
 		debug::db({ std::wstring(L"Cant find directorie: " + dir::shaders.path().generic_wstring() + L"\n"), {DBINFO}, debug::kritical });
 	
-	file::box = (dir::res / L"box.obj").generic_wstring();
+	file::box = (dir::res.path() / L"box.obj").generic_wstring();
 	if( ! (fs::directory_entry(file::box).exists() ) )
 		debug::db({ std::wstring(L"Cant find file: " + file::box + L"\n"), {DBINFO}, debug::kritical });
 	
-	file::vertex = (dir::shaders / L"vertex.shader").generic_wstring();
-	file::unicolor_fragment = (dir::shaders / L"unicolor_fragment.shader").generic_wstring();
+	file::vertex = (dir::shaders.path() / L"vertex.shader").generic_wstring();
+	file::unicolor_fragment = (dir::shaders.path() / L"unicolor_fragment.shader").generic_wstring();
 	
 	}
 	
@@ -62,7 +62,7 @@ MyFrame::MyFrame()
 		if (GLEW_OK != err)
 		{
 			std::wstring errStr1 = L"Could not initialize glew:\n";
-			std::wstring errStr2 = errStr1 + reinterpret_cast<const char*>(glewGetErrorString(err)) + L"\n";
+			std::wstring errStr2 = errStr1 + reinterpret_cast<const wchar_t*>(glewGetErrorString(err)) + L"\n";
 			//wxMessageBox(errStr2 , "Error", wxICON_ERROR | wxOK);
 			debug::db({ std::wstring(errStr2), {DBINFO}, debug::kritical });
 

@@ -54,9 +54,9 @@ endif(GLEW_FOUND)
 
 
 # in case release, compiles as desktop app. debug gets a console.
-if(WIN32)
+if(NOT MINGW AND WIN32)
 	target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
-endif(WIN32)
+endif()
 
 
 # precompile pch.h

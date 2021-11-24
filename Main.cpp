@@ -9,13 +9,19 @@ wxIMPLEMENT_APP_CONSOLE(MyApp);
 
 bool MyApp::OnInit()
 {
+	#ifdef NDEBUG 
+	debug::db = [](debug::Data d) 
+	{ 
+		wxMessageBox(d.msg);
+		if( d.level == debug::kritical ) exit(-1); 
+	};	
+	#else
 	debug::db = [](debug::Data d) 
 	{ 
 		std::wcout<<d.msg<<'\n';
-		if( d.level == debug::kritical ) exit(-1); 
 	};
-
-
+	#endif
+	
 	// get paths
 	{
 		
@@ -38,10 +44,10 @@ bool MyApp::OnInit()
 		debug::db({ std::wstring(L"Cant find file: " + file::box + L"\n"), {DBINFO}, debug::kritical });
 	
 	file::vertex = (dir::shaders.path() / L"vertex.shader").generic_wstring();
-	file::unicolor_fragment = (dir::shaders.path() / L"unicolor_fragment.shader").generic_wstring();
+	file::unicolor_fragment = (dir::shaders.path() / L"qqqqqunicolor_fragment.shader").generic_wstring();
 	
 	}
-	
+
 	
     MyFrame *frame = new MyFrame();
     frame->Show(true);
@@ -80,10 +86,16 @@ MyFrame::MyFrame()
 	{
 		shad::vertex = shad::compile(file::vertex, GL_VERTEX_SHADER);
 		shad::unicolorFrag = shad::compile(file::unicolor_fragment, GL_FRAGMENT_SHADER);
-		
-		//debug::Data a = debug::get();
-		
-		if( debug::get() ) std::wcout<<debug::last.msg;
+				
+		if( debug::get() ) 
+		{ 
+			#ifdef NDEBUG 
+			debug::showLastError({DBINFO}); 
+			exit(-1);
+			#else
+			debug::showLastError({DBINFO}); 
+			#endif
+		}
 		
 		prog::unicolor = glCreateProgram();
 		prog::link(prog::unicolor, shad::vertex, shad::unicolorFrag);

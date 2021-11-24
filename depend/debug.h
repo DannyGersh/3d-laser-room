@@ -48,7 +48,10 @@ namespace debug
 		}
 		else return false;
 	};
-	
+	void showLastError(Info i)
+	{
+		db({ last.msg , i, last.level });
+	}
 };
 
 #define DBINFO debug::Info(__LINE__, __FILE__, __FUNCTION__)

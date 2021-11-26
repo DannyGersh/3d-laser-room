@@ -1,9 +1,8 @@
 #include "src/gui.h"
 #include "src/openGL.h"
-//#include "depend/debug.h"
-#define WS const wchar_t*
-
 namespace fs = std::filesystem;
+
+
 
 class MyApp : public wxApp
 {
@@ -11,22 +10,35 @@ public:
     virtual bool OnInit();
 };
 
+
+
+class Canvas : public wxGLCanvas
+{
+public:
+    Canvas(wxFrame* parent);
+	wxGLContext* context;
+private:
+	void render(wxPaintEvent& evt);
+	void OnResize(wxSizeEvent& event);
+	
+	wxDECLARE_EVENT_TABLE();
+};
+wxBEGIN_EVENT_TABLE(Canvas, wxGLCanvas)
+EVT_PAINT(Canvas::render)
+EVT_SIZE(Canvas::OnResize)
+wxEND_EVENT_TABLE()
+
+
+
 class MyFrame : public wxFrame
 {
 public:
     MyFrame();
-	wxGLCanvas* canvas;
-	wxGLContext* context;
+	Canvas* canvas;
 private:
     void OnExit(wxCommandEvent& event);
-	void render(wxPaintEvent& evt);
-	
-	wxDECLARE_EVENT_TABLE();
 };
 
-wxBEGIN_EVENT_TABLE(MyFrame, wxFrame)
-EVT_PAINT(MyFrame::render)
-wxEND_EVENT_TABLE()
 
 
 namespace dir

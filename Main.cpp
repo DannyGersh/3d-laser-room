@@ -1,5 +1,5 @@
 #include "Main.h"
-using namespace std;
+
 
 #ifdef NDEBUG 
 wxIMPLEMENT_APP(MyApp);
@@ -8,7 +8,10 @@ wxIMPLEMENT_APP_CONSOLE(MyApp);
 #endif
 
 bool MyApp::OnInit()
-{
+{	
+	// debug
+	{
+		
 	#ifdef NDEBUG 
 	debug::db = [](debug::Data d) 
 	{ 
@@ -21,6 +24,9 @@ bool MyApp::OnInit()
 		std::wcout<<d.msg<<'\n';
 	};
 	#endif
+	
+	}
+	
 	
 	// get paths
 	{
@@ -44,7 +50,7 @@ bool MyApp::OnInit()
 		debug::db({ std::wstring(L"Cant find file: " + file::box + L"\n"), {DBINFO}, debug::kritical });
 	
 	file::vertex = (dir::shaders.path() / L"vertex.shader").generic_wstring();
-	file::unicolor_fragment = (dir::shaders.path() / L"qqqqqunicolor_fragment.shader").generic_wstring();
+	file::unicolor_fragment = (dir::shaders.path() / L"unicolor_fragment.shader").generic_wstring();
 	
 	}
 
@@ -57,36 +63,33 @@ bool MyApp::OnInit()
 MyFrame::MyFrame()
     : wxFrame(NULL, wxID_ANY, "wx_gl")
 {
-    // initialization - glCanvas, glContext, glew
+	canvas = new Canvas(this);
+	Gui gui = Gui(this, canvas);
+}
+
+
+
+Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
+{ 
+	context = new wxGLContext(this); 
+	context->SetCurrent(*this); 
+	
+	// glew
 	{
-		int args[] = {WX_GL_RGBA, WX_GL_DOUBLEBUFFER, WX_GL_DEPTH_SIZE, 16, 0};
-		canvas = new wxGLCanvas(this, wxID_ANY,  args, wxDefaultPosition, wxDefaultSize, 0, wxT("GLCanvas"));
-		context = new wxGLContext(canvas);	
-		context->SetCurrent(*canvas);
-		
 		GLenum err = glewInit();
 		if (GLEW_OK != err)
 		{
 			std::wstring errStr1 = L"Could not initialize glew:\n";
 			std::wstring errStr2 = errStr1 + reinterpret_cast<const wchar_t*>(glewGetErrorString(err)) + L"\n";
-			//wxMessageBox(errStr2 , "Error", wxICON_ERROR | wxOK);
 			debug::db({ std::wstring(errStr2), {DBINFO}, debug::kritical });
-
-			exit(-1);
 		}
-	
 	}
 	
-	// load obj file
-	// not using paths from dir:: because OBJ_Loader.h does not use wstring, and might not find the file.
-	objl::Loader file;
-	file.LoadFile("res/box.obj");
-	
-	// openGL
+	// shaders, programs
 	{
-		shad::vertex = shad::compile(file::vertex, GL_VERTEX_SHADER);
-		shad::unicolorFrag = shad::compile(file::unicolor_fragment, GL_FRAGMENT_SHADER);
-				
+		shad::vertex = shad::compile(shad::readFile(file::vertex).c_str(), GL_VERTEX_SHADER);
+		shad::unicolorFrag = shad::compile(shad::readFile(file::unicolor_fragment).c_str(), GL_FRAGMENT_SHADER);
+		
 		if( debug::get() ) 
 		{ 
 			#ifdef NDEBUG 
@@ -101,27 +104,56 @@ MyFrame::MyFrame()
 		prog::link(prog::unicolor, shad::vertex, shad::unicolorFrag);
 		glUseProgram(prog::unicolor);
 	}
-
-	Gui* gui = new Gui(this, canvas);
-
-}
 	
-void MyFrame::render(wxPaintEvent& evt)
-{
-    canvas->SetCurrent(*context);
-    wxPaintDC(this); // only to be used in paint events. use wxClientDC to paint outside the paint event
-	
-	// randomly change color of backgrownd via glClear
+	// load obj file, openGL state
 	{
-		float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float g = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		float b = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
-		glClearColor(r, g, b, 1.0f );
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		// not using paths from dir:: because OBJ_Loader.h does not use wstring, and might not find the file.
+		objl::Loader file;
+		file.LoadFile("res/box.obj");
+		
+		glClearColor(0, 0, 0, 1.0f );
+		set_uniCOLOR(prog::unicolor, glm::vec4(1,0,0,1));
 	}
+	
+} 
+void Canvas::OnResize(wxSizeEvent& event)
+{
+	auto size = event.GetSize();
+	glViewport(0,0,size.x,size.y);
+	event.Skip();
+}
+void Canvas::render(wxPaintEvent& evt)
+{
+	SetCurrent(*context);
+    wxPaintDC(this);
 
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(prog::unicolor);
+	
+	const glm::vec3 a[] = { glm::vec3(0., 0., 0.), glm::vec3(1., 1., 1.) };
+	
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), a, GL_STATIC_DRAW);
+	
+	glEnableVertexAttribArray(0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glVertexAttribPointer(
+		0,							// axes shader variables at location 0
+		3,							// number of atrributes
+		GL_FLOAT,					// type
+		GL_FALSE,					// normalized?
+		sizeof(float)*3,            // stride: total size of 1 triangle
+		(void*)0					// size of offset from start
+	);
+	glDrawArrays(GL_LINES, 0, 3);
+	
+	
+	GLerror();
 	glFlush();
-    canvas->SwapBuffers();
+    SwapBuffers();
 }
 
 

@@ -1,11 +1,12 @@
-# if cmake is having trouble finding dependencies,
-# set wxRoot to the installation dir of wxWidgets on your system,
-# and glewRoot as well.
-# you may have to tweak this file, because some paths may
-# change on different installations.
-# 
+# if you ran into trouble, try seting wxRoot, glewRoot and boostRoot to the root directories of the assosiated libraries.
+# please set them from a different CMakeLists file, and call add_subdirectory on this project directorie.
+#
+# wxwidgets - wxRoot - REQUIRED 
+# glew - glewRoot - REQUIRED 
+# boost - boostRoot - optioanall 
+#
 # for MinGW builds:
-# cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=<Debug/release ... etk> -B <target dir>
+# cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=<Debug/Release ... etk> -B <target dir>
 # for msvc build:
 # cmake -B <target dir> --config <Debug/release ... etk>
 
@@ -26,14 +27,17 @@ if(wxWidgets_FOUND)
 	include(${wxWidgets_USE_FILE})	
 	target_link_libraries(${PROJECT_NAME} ${wxWidgets_LIBRARIES})
 else()
-	file(GLOB wxlib "${wxRoot}/lib/*.a")
-	file(GLOB glewlib "${glewRoot}/lib/*.a")
-	
-	include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include")
-	target_link_libraries(${PROJECT_NAME} ${wxlib})
-	
-	target_include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/lib/wx/include/msw-unicode-3.1")
-	target_include_directories(${PROJECT_NAME} PRIVATE "C:/danny/3d/3d-laser-room")
+	if(EXISTS ${wxRoot})
+		file(GLOB wxlib "${wxRoot}/lib/*.a")
+		
+		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include")
+		target_link_libraries(${PROJECT_NAME} ${wxlib})
+		
+		target_include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/lib/wx/include/msw-unicode-3.1")
+		target_include_directories(${PROJECT_NAME} PRIVATE "C:/danny/3d/3d-laser-room")
+	elseif()
+		message(FATAL_ERROR "wxWidgets REQUIRED, cannot find wxWidgets, try to set wxRoot to wxWidgets root directorie")
+	endif(EXISTS ${wxRoot})
 endif(wxWidgets_FOUND)
 
 
@@ -48,9 +52,24 @@ if(GLEW_FOUND)
 	target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir2}/include)
 	target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
 else()
-	include_directories(${PROJECT_NAME} PRIVATE "${glewRoot}/include")
-	target_link_libraries(${PROJECT_NAME} ${glewlib})
+	if(EXISTS ${glewRoot})
+		include_directories(${PROJECT_NAME} PRIVATE "${glewRoot}/include")
+		file(GLOB glewlib "${glewRoot}/lib/*.a")
+		target_link_libraries(${PROJECT_NAME} ${glewlib})
+	elseif()
+		message(FATAL_ERROR "glew REQUIRED, cannot find glew, try to set glewRoot to glew root directorie")
+	endif()
 endif(GLEW_FOUND)
+
+
+find_package(boost)
+if(NOT BOOST_FOUND)
+	if(EXISTS ${boostRoot})
+		target_include_directories(${PROJECT_NAME} PRIVATE ${boostRoot})
+	elseif()
+		message(STATUS "cannot find boostRoot, try to set boostRoot to boost root directorie")
+	endif()
+endif(EXISTS BOOST_FOUND)
 
 
 # in case release, compiles as desktop app. debug gets a console.

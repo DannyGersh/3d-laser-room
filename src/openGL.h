@@ -102,6 +102,7 @@ void link(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
 
 }
 
+
 void UniformData(GLuint programID, glm::mat4 mat)
 {
 	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
@@ -111,4 +112,31 @@ void set_uniCOLOR(GLuint _uniCOLOR_programID, glm::vec4 color)
 {
 	GLint uniTrans = glGetUniformLocation(_uniCOLOR_programID, "inCOLOR");
 	glUniform4fv(uniTrans, 1, &color[0]);
+}
+
+
+namespace draw
+{
+	void line()
+	{
+		const glm::vec3 a[] = { glm::vec3(0., 0., 0.), glm::vec3(1., 1., 1.) };
+	
+		GLuint buffer;
+		glGenBuffers(1, &buffer);
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), a, GL_STATIC_DRAW);
+		
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*3,            // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(GL_LINES, 0, 3);
+	}
 }

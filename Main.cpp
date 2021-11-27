@@ -123,7 +123,8 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 void Canvas::OnResize(wxSizeEvent& event)
 {
 	auto size = event.GetSize();
-	glViewport(0,0,size.x,size.y);
+	if( size.x > size.y) glViewport( size.x/2-size.y/2, 0, size.y, size.y );
+	else glViewport( 0, size.y/2-size.x/2, size.x, size.x );
 	event.Skip();
 }
 void Canvas::render(wxPaintEvent& evt)
@@ -134,25 +135,7 @@ void Canvas::render(wxPaintEvent& evt)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(prog::unicolor);
 	
-	const glm::vec3 a[] = { glm::vec3(0., 0., 0.), glm::vec3(1., 1., 1.) };
-	
-	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), a, GL_STATIC_DRAW);
-	
-	glEnableVertexAttribArray(0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glVertexAttribPointer(
-		0,							// axes shader variables at location 0
-		3,							// number of atrributes
-		GL_FLOAT,					// type
-		GL_FALSE,					// normalized?
-		sizeof(float)*3,            // stride: total size of 1 triangle
-		(void*)0					// size of offset from start
-	);
-	glDrawArrays(GL_LINES, 0, 3);
+	draw::line();
 	
 	
 	GLerror();

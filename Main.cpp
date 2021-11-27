@@ -116,7 +116,7 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 		file.LoadFile("res/box.obj");
 		
 		glClearColor(0, 0, 0, 1.0f );
-		set_uniCOLOR(prog::unicolor, glm::vec4(1,0,0,1));
+		set_uniColor(prog::unicolor, glm::vec4(1,0,0,1));
 	}
 	
 } 
@@ -135,8 +135,11 @@ void Canvas::render(wxPaintEvent& evt)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glUseProgram(prog::unicolor);
 	
-	draw::line();
-	
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	std::vector<glm::vec3> data{{-.7, -.7, 0}, {.7,-.7,0}, {.7, .7, 0}};
+	draw::triangle({0,0,0},{-1,0,0},{-1,-1,0}, buffer);
+	glDeleteBuffers(1, &buffer);
 	
 	GLerror();
 	glFlush();

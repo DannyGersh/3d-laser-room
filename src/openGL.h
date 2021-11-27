@@ -105,26 +105,26 @@ void link(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
 
 void UniformData(GLuint programID, glm::mat4 mat)
 {
-	GLint uniTrans = glGetUniformLocation(programID, "trans"); // get the 'trans' uniform from shader
-	glUniformMatrix4fv(uniTrans, 1, GL_FALSE, glm::value_ptr(mat)); // update the uniform
+	GLint uniform = glGetUniformLocation(programID, "trans");
+	glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(mat));
 }
-void set_uniCOLOR(GLuint _uniCOLOR_programID, glm::vec4 color)
+void set_uniColor(GLuint programID, glm::vec4 color)
 {
-	GLint uniTrans = glGetUniformLocation(_uniCOLOR_programID, "inCOLOR");
-	glUniform4fv(uniTrans, 1, &color[0]);
+	GLint uniform = glGetUniformLocation(programID, "inCOLOR");
+	glUniform4fv(uniform, 1, &color[0]);
 }
 
 
 namespace draw
 {
-	void line()
+	void line(glm::vec3 a, glm::vec3 b)
 	{
-		const glm::vec3 a[] = { glm::vec3(0., 0., 0.), glm::vec3(1., 1., 1.) };
+		const glm::vec3 data[] = { a, b };
 	
 		GLuint buffer;
 		glGenBuffers(1, &buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), a, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
 		
 		glEnableVertexAttribArray(0);
 		
@@ -138,5 +138,65 @@ namespace draw
 			(void*)0					// size of offset from start
 		);
 		glDrawArrays(GL_LINES, 0, 3);
+		
+		glDeleteBuffers(1, &buffer);
+	}
+	void line(glm::vec3 a, glm::vec3 b, GLuint buffer)
+	{
+		const glm::vec3 data[] = { a, b };
+
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
+		
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*3,            // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(GL_LINES, 0, 3);
+	}
+	void lines(std::vector<glm::vec3>& data, GLuint buffer)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*data.size(), &data[0], GL_STATIC_DRAW);
+		
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*3,            // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(GL_LINE_STRIP, 0, data.size());
+	}
+	void triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, GLuint buffer)
+	{
+		const glm::vec3 data[] = { a, b, c };
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*3, data, GL_STATIC_DRAW);
+		
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*3,            // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 }

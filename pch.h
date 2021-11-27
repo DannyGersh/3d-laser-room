@@ -14,6 +14,14 @@
 	#include <filesystem>
 	#include <sstream>
 	
+	#ifndef NDEBUG
+		#if __has_include ("boost/stacktrace.hpp")
+			#ifdef USE_STACKTRACE
+				#include "boost/stacktrace.hpp"
+			#endif
+		#endif
+	#endif
+	
 	#include "depend/OBJ_Loader.h"
 	
 	#include "depend/glm/gtc/matrix_transform.hpp"

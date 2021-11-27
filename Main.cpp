@@ -21,7 +21,12 @@ bool MyApp::OnInit()
 	#else
 	debug::db = [](debug::Data d) 
 	{ 
+		#ifdef USE_STACKTRACE
+		std::string a = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
+		std::wcout<<d.msg<<'\n'<<a<<'\n';
+		#else
 		std::wcout<<d.msg<<'\n';
+		#endif
 	};
 	#endif
 	
@@ -108,7 +113,6 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 	// load obj file, openGL state
 	{
 		// not using paths from dir:: because OBJ_Loader.h does not use wstring, and might not find the file.
-		objl::Loader file;
 		file.LoadFile("res/box.obj");
 		
 		glClearColor(0, 0, 0, 1.0f );

@@ -5,6 +5,9 @@
 # glew - glewRoot - REQUIRED 
 # boost - boostRoot - optioanall 
 #
+# if you want a stackTrace in debugging, set the following: (not in this file)
+# add_definitions( -DUSE_STACKTRACE=1 )
+#
 # for MinGW builds:
 # cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=<Debug/Release ... etk> -B <target dir>
 # for msvc build:
@@ -63,12 +66,14 @@ endif(GLEW_FOUND)
 
 
 find_package(boost)
-if(NOT BOOST_FOUND)
+if(BOOST_FOUND)
+	target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
+else()
 	if(EXISTS ${boostRoot})
-		target_include_directories(${PROJECT_NAME} PRIVATE ${boostRoot})
+		target_include_directories(${PROJECT_NAME} PUBLICK ${boostRoot})
 	elseif()
 		message(STATUS "cannot find boostRoot, try to set boostRoot to boost root directorie")
-	endif()
+endif()
 endif(EXISTS BOOST_FOUND)
 
 

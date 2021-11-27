@@ -17,6 +17,7 @@ class Canvas : public wxGLCanvas
 public:
     Canvas(wxFrame* parent);
 	wxGLContext* context;
+	objl::Loader file;
 private:
 	void render(wxPaintEvent& evt);
 	void OnResize(wxSizeEvent& event);

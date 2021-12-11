@@ -15,7 +15,7 @@
 
 
 project(3d-laser-room)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.9...3.22.1)
 aux_source_directory(. SRC_LIST)
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
@@ -29,15 +29,33 @@ find_package(wxWidgets COMPONENTS core base gl)
 if(wxWidgets_FOUND)
 	include(${wxWidgets_USE_FILE})	
 	target_link_libraries(${PROJECT_NAME} ${wxWidgets_LIBRARIES})
+
+	string(REGEX MATCHALL ".*dll.*;" base "${wxWidgets_INCLUDE_DIRS}")
+	cmake_path(GET base PARENT_PATH base)
+	file(GLOB globed ${base}/*.dll)
+	string(REGEX MATCH "wx[^\/]+u_core[^\/]+\.dll" ar "${globed}")
+	string(REGEX MATCH "wx[^\/]+u_vc[^\/]+\.dll" br "${globed}")
+	string(REGEX MATCH "wx[^\/]+u_gl[^\/]+\.dll" cr "${globed}")
+	string(REGEX MATCH "wx[^\/]+ud_core[^\/]+\.dll" ad "${globed}")
+	string(REGEX MATCH "wx[^\/]+ud_vc[^\/]+\.dll" bd "${globed}")
+	string(REGEX MATCH "wx[^\/]+ud_gl[^\/]+\.dll" cd "${globed}")
+	
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+	-E copy "${base}/$<IF:$<CONFIG:Debug>,${ad},${ar}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )	
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+	-E copy "${base}/$<IF:$<CONFIG:Debug>,${bd},${br}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+	-E copy "${base}/$<IF:$<CONFIG:Debug>,${cd},${cr}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
+	
 else()
 	if(EXISTS ${wxRoot})
 		file(GLOB wxlib "${wxRoot}/lib/*.a")
 		
 		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include")
+		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include/msvc")
+		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/lib/vc_x64_dll/mswud")
 		target_link_libraries(${PROJECT_NAME} ${wxlib})
 		
-		target_include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/lib/wx/include/msw-unicode-3.1")
-		target_include_directories(${PROJECT_NAME} PRIVATE "C:/danny/3d/3d-laser-room")
 	elseif()
 		message(FATAL_ERROR "wxWidgets REQUIRED, cannot find wxWidgets, try to set wxRoot to wxWidgets root directorie")
 	endif(EXISTS ${wxRoot})
@@ -48,33 +66,59 @@ endif(wxWidgets_FOUND)
 # glew doesn't play well with cmake, this is a workaround. 
 # works on win10, Visual Studio 16 2019 compiler and minGW compiler, cmake version 3.16.3.
 # it just gets the glew installd path from ${GLEW_DIR} and uses it afterward.
-find_package(glew)
+find_package(GLEW)
 if(GLEW_FOUND)
-	set(glew_dir2 ${GLEW_DIR})
+	set(glew_dir ${GLEW_DIR})
 	string(REPLACE "/lib/cmake/glew" "" glew_dir2 ${GLEW_DIR})
-	target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir2}/include)
-	target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
+	target_include_directories(${PROJECT_NAME} PRIVATE ${glew_dir}/include)
+	if(WIN32) 
+		target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.lib)
+	else() 
+		target_link_libraries(${PROJECT_NAME} ${glew_dir2}/lib/*.a)
+	endif()
 else()
 	if(EXISTS ${glewRoot})
+		if(EXISTS ${glewRoot}/lib AND EXISTS ${glewRoot}/include) 
+			message(STATUS "foud glew via {glewRoot}")
+		else() 
+			message(FATAL_ERROR "cannot find glew in anny way")
+		endif()
+		
 		include_directories(${PROJECT_NAME} PRIVATE "${glewRoot}/include")
-		file(GLOB glewlib "${glewRoot}/lib/*.a")
+
+		file(GLOB globed2 ${glewRoot}/bin/*.dll)
+		
+		# this commented section is if debug builds ask for debug version of glew wich they dont.
+		#string(REGEX MATCHALL "glew[^\/]+[^d]\.dll" glewr "${globed2}")
+		#string(REGEX MATCHALL "glew[^\/]+d\.dll" glewd "${globed2}")
+		#add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+		#-E copy "${glewRoot}/bin/$<IF:$<CONFIG:Debug>,${glewd},${glewr}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )	
+		string(REGEX MATCHALL "glew[^\/]+[^d]\.dll" glewr "${globed2}")
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+		-E copy "${glewRoot}/bin/$<IF:$<CONFIG:Debug>,${glewr},${glewr}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
+		
+		if(WIN32) 
+			file(GLOB glewlib "${glewRoot}/lib/*.lib")
+		else()
+			file(GLOB glewlib "${glewRoot}/lib/*.a")
+		endif()
 		target_link_libraries(${PROJECT_NAME} ${glewlib})
-	elseif()
-		message(FATAL_ERROR "glew REQUIRED, cannot find glew, try to set glewRoot to glew root directorie")
+	else()
+		message(FATAL_ERROR "cannot find glew, try to set {glewlib} to glew root directorie")
 	endif()
 endif(GLEW_FOUND)
 
 
-find_package(boost)
+find_package(Boost)
 if(BOOST_FOUND)
 	target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
 else()
 	if(EXISTS ${boostRoot})
 		target_include_directories(${PROJECT_NAME} PUBLICK ${boostRoot})
-	elseif()
+	elseif(EXISTS ${boostRoot})
 		message(STATUS "cannot find boostRoot, try to set boostRoot to boost root directorie")
+	endif()
 endif()
-endif(EXISTS BOOST_FOUND)
 
 
 # in case release, compiles as desktop app. debug gets a console.
@@ -82,7 +126,15 @@ if(NOT MINGW AND WIN32)
 	target_link_options(${PROJECT_NAME} PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>")
 endif()
 
+# copy res dir to build dir
+add_custom_command(
+  TARGET ${PROJECT_NAME} POST_BUILD
+  COMMAND ${CMAKE_COMMAND}
+  ARGS -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/res" "$<TARGET_FILE_DIR:${PROJECT_NAME}>/res"
+)
 
+
+	  
 # precompile pch.h
 target_precompile_headers(${PROJECT_NAME} PRIVATE pch.h)
 

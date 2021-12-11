@@ -15,7 +15,7 @@ bool MyApp::OnInit()
 	#ifdef NDEBUG 
 	debug::db = [](debug::Data d) 
 	{ 
-		wxMessageBox(d.msg);
+		wxMessageBox(d.msg, d.line, d.file);
 		if( d.level == debug::kritical ) exit(-1); 
 	};	
 	#else
@@ -25,7 +25,7 @@ bool MyApp::OnInit()
 		std::string a = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
 		std::wcout<<d.msg<<'\n'<<a<<'\n';
 		#else
-		std::wcout<<d.msg<<'\n';
+		std::wcout<<d.msg<<"\n("<<d.info.line<<") "<<d.info.file<<"\n";
 		#endif
 	};
 	#endif
@@ -92,8 +92,8 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 	
 	// shaders, programs
 	{
-		shad::vertex = shad::compile(shad::readFile(file::vertex).c_str(), GL_VERTEX_SHADER);
-		shad::unicolorFrag = shad::compile(shad::readFile(file::unicolor_fragment).c_str(), GL_FRAGMENT_SHADER);
+		shad::vertex = shad::compile(file::vertex, GL_VERTEX_SHADER);
+		shad::unicolorFrag = shad::compile(file::unicolor_fragment, GL_FRAGMENT_SHADER);
 		
 		if( debug::get() ) 
 		{ 

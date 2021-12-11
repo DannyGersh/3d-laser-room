@@ -13,17 +13,17 @@ void GLerror()
 		break;
 
 	case GL_INVALID_ENUM:
-		debug::db({ L"openGL error: GLenum argument out of range\n", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: GLenum argument out of range", {DBINFO}, debug::warning });
 	case GL_INVALID_VALUE:
-		debug::db({ L"openGL error: Numeric argument out of range.\n", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Numeric argument out of range.", {DBINFO}, debug::warning });
 	case GL_INVALID_OPERATION:
-		debug::db({ L"openGL error: Operation illegal in current state.\n", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Operation illegal in current state.", {DBINFO}, debug::warning });
 	case GL_STACK_OVERFLOW:
-		debug::db({ L"openGL error: Function would cause a stack overflow.\n", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Function would cause a stack overflow.", {DBINFO}, debug::warning });
 	case GL_STACK_UNDERFLOW:
-		debug::db({ L"openGL error: Function would cause a stack underflow.\n", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Function would cause a stack underflow.", {DBINFO}, debug::warning });
 	case GL_OUT_OF_MEMORY:
-		debug::db({ L"openGL error: Not enough memory left to execute function.\n", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Not enough memory left to execute function.", {DBINFO}, debug::warning });
 	}
 
 }
@@ -47,17 +47,21 @@ std::string readFile(std::wstring file_path)
 		for( int i=0 ; i<fileSize ; i++ ) data[i] = file.get();
 		file.close();
 	}
-	
 	return data;
 }
-
-GLuint compile(const char* string, GLuint type)
+GLuint compileShader(const char* string, GLuint type, std::wstring file_path)
 {
 	// type:  GL_VERTEX_SHADER , GL_FRAGMENT_SHADER
-	
 	GLuint ShaderID = glCreateShader(type);
 	glShaderSource(ShaderID, 1, &string, NULL);
 	glCompileShader(ShaderID);
+	return ShaderID;
+}
+GLuint compile(std::wstring file_path, GLuint type)
+{
+	// type:  GL_VERTEX_SHADER , GL_FRAGMENT_SHADER
+	
+	GLuint ShaderID = compileShader(readFile(file_path).c_str(), type, file_path);
 	
 	GLint compile_status = 0;
 	glGetShaderiv(ShaderID, GL_COMPILE_STATUS, &compile_status);
@@ -72,10 +76,9 @@ GLuint compile(const char* string, GLuint type)
 		
 		glDeleteShader(ShaderID);
 		
-		//static_cast<const char*>(infoLog);
-		debug::raise({ std::wstring(L"openGL error; Failed to compile shader:\n") , {DBINFO}, debug::warning });
+		const char* glErr = static_cast<const char*>(infoLog);
+		debug::raise({ std::wstring(L"openGL error; Failed to compile shader: ")+file_path+'\n'+glErr , {DBINFO}, debug::warning });
 	}
-	
 	return ShaderID;
 }
 

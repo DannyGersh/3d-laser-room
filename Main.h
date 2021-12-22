@@ -1,5 +1,6 @@
 #include "src/gui.h"
 #include "src/openGL.h"
+typedef std::wstring WS;
 namespace fs = std::filesystem;
 
 
@@ -17,7 +18,8 @@ class Canvas : public wxGLCanvas
 public:
     Canvas(wxFrame* parent);
 	wxGLContext* context;
-	objl::Loader file;
+	objl::Loader objFile;
+	objl::Mesh box;
 private:
 	void render(wxPaintEvent& evt);
 	void OnResize(wxSizeEvent& event);

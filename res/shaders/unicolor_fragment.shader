@@ -7,5 +7,5 @@ uniform vec4 inCOLOR;
 
 void main() {
 	color = inCOLOR;
-	color = vec4(0, 1, 1, 1);
+	//color = vec4(0, 1, 1, 1);
 }

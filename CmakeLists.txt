@@ -17,6 +17,7 @@
 project(3d-laser-room)
 cmake_minimum_required(VERSION 2.9...3.22.1)
 aux_source_directory(. SRC_LIST)
+include_directories(${PROJECT_SOURCE_DIR}) # mingw doesnt pick this up by default
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
@@ -32,6 +33,9 @@ if(wxWidgets_FOUND)
 
 	string(REGEX MATCHALL ".*dll.*;" base "${wxWidgets_INCLUDE_DIRS}")
 	cmake_path(GET base PARENT_PATH base)
+	
+	# copy required dlls
+	if(WIN32)
 	file(GLOB globed ${base}/*.dll)
 	string(REGEX MATCH "wx[^\/]+u_core[^\/]+\.dll" ar "${globed}")
 	string(REGEX MATCH "wx[^\/]+u_vc[^\/]+\.dll" br "${globed}")
@@ -39,26 +43,55 @@ if(wxWidgets_FOUND)
 	string(REGEX MATCH "wx[^\/]+ud_core[^\/]+\.dll" ad "${globed}")
 	string(REGEX MATCH "wx[^\/]+ud_vc[^\/]+\.dll" bd "${globed}")
 	string(REGEX MATCH "wx[^\/]+ud_gl[^\/]+\.dll" cd "${globed}")
-	
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
 	-E copy "${base}/$<IF:$<CONFIG:Debug>,${ad},${ar}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )	
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
 	-E copy "${base}/$<IF:$<CONFIG:Debug>,${bd},${br}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
 	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
 	-E copy "${base}/$<IF:$<CONFIG:Debug>,${cd},${cr}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
-	
+	endif()
 else()
-	if(EXISTS ${wxRoot})
-		file(GLOB wxlib "${wxRoot}/lib/*.a")
+	
+	if(EXISTS ${wxRoot}/lib AND EXISTS ${wxRoot}/include) 
+	
+		FILE(GLOB wxLibDir ${wxRoot}/lib/*)	
+		message(STATUS "searching wxWidgets libraries in: ${wxLibDir}")
 		
+		FILE(GLOB a ${wxLibDir}/*)	
+		foreach(X IN LISTS a)
+			if(IS_DIRECTORY ${X})
+				include_directories(${X})
+			endif()
+		endforeach()
+
+		message(STATUS "foud wxWidgets via {wxRoot}")
+		file(GLOB wxlib "${wxLibDir}/*.lib")
+		file(GLOB wxlib "${wxLibDir}/*.a")
 		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include")
-		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/include/msvc")
-		include_directories(${PROJECT_NAME} PRIVATE "${wxRoot}/lib/vc_x64_dll/mswud")
 		target_link_libraries(${PROJECT_NAME} ${wxlib})
-		
-	elseif()
-		message(FATAL_ERROR "wxWidgets REQUIRED, cannot find wxWidgets, try to set wxRoot to wxWidgets root directorie")
-	endif(EXISTS ${wxRoot})
+
+		# copy required dlls
+		if(WIN32)
+		file(GLOB globed ${wxLibDir}/*.dll)
+		string(REGEX MATCH "wx[^\/]+u_core[^\/]+\.dll" ar "${globed}")
+		string(REGEX MATCH "wx[^\/]+u_vc[^\/]+\.dll" br "${globed}")
+		string(REGEX MATCH "wx[^\/]+u_gl[^\/]+\.dll" cr "${globed}")
+		string(REGEX MATCH "wx[^\/]+ud_core[^\/]+\.dll" ad "${globed}")
+		string(REGEX MATCH "wx[^\/]+ud_vc[^\/]+\.dll" bd "${globed}")
+		string(REGEX MATCH "wx[^\/]+ud_gl[^\/]+\.dll" cd "${globed}")
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+		-E copy "${wxLibDir}/$<IF:$<CONFIG:Debug>,${ad},${ar}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )	
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+		-E copy "${wxLibDir}/$<IF:$<CONFIG:Debug>,${bd},${br}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+		-E copy "${wxLibDir}/$<IF:$<CONFIG:Debug>,${cd},${cr}>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )
+		add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND}
+		-E copy "${wxLibDir}/$<IF:$<CONFIG:Debug>,wxbase316ud_gcc_custom.dll,wxbase316u_gcc_custom.dll>" "$<TARGET_FILE_DIR:${PROJECT_NAME}>" )	
+		endif()
+	else() 
+		message(FATAL_ERROR "cannot find wxWidgets in anny way")
+	endif()
+	
 endif(wxWidgets_FOUND)
 
 

@@ -10,6 +10,7 @@ namespace debug
 		std::string file;
 		std::string function;
 		
+		Info() = default;
 		Info(int Line, std::string File, std::string Function)
 		{
 			line		= Line;
@@ -23,6 +24,14 @@ namespace debug
 		std::wstring msg;
 		Info info;
 		int level;
+		
+		Data() = default;
+		Data( std::wstring msg_in, Info info_in, int level_in )
+		{
+			msg  	=	msg_in;
+			info 	=	info_in;
+			level	=	level_in;
+		}
 	};
 	Data nulld{L"", {0,"",""}, 0};
 	

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "depend/debug.h"
-
+typedef std::wstring WS; 
 
 void GLerror()
 {
@@ -77,7 +77,7 @@ GLuint compile(std::wstring file_path, GLuint type)
 		glDeleteShader(ShaderID);
 		
 		const char* glErr = static_cast<const char*>(infoLog);
-		debug::raise({ std::wstring(L"openGL error; Failed to compile shader: ")+file_path+'\n'+glErr , {DBINFO}, debug::warning });
+		debug::raise({ WS(L"openGL error; Failed to compile shader: ")+WS(file_path+L"\n"+glErr) , {DBINFO}, debug::warning });
 	}
 	return ShaderID;
 }
@@ -201,5 +201,43 @@ namespace draw
 			(void*)0					// size of offset from start
 		);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+
+
+	//void test(std::shared_ptr<void> a)
+	//{
+	//	auto poop = std::static_pointer_cast<char*>(a);
+	//	std::cout<<(*poop.get())[0]<<(*poop.get())[1]<<(*poop.get())[2]<<(*poop.get())[3]<<'\n';
+	//}
+	//
+	//int main()
+	//{
+	//	char poop[] = {'a','b','c','d'};
+	//	test(std::make_shared<char*>(poop));
+	//}
+	void testline(std::shared_ptr<void> A, std::shared_ptr<void> B)
+	{
+		auto a = std::static_pointer_cast<glm::vec3>(A);
+		//const glm::vec3 data[] = { a, b };
+		//
+		//GLuint buffer;
+		//glGenBuffers(1, &buffer);
+		//glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
+		//
+		//glEnableVertexAttribArray(0);
+		//
+		//glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		//glVertexAttribPointer(
+		//	0,							// axes shader variables at location 0
+		//	3,							// number of atrributes
+		//	GL_FLOAT,					// type
+		//	GL_FALSE,					// normalized?
+		//	sizeof(float)*3,            // stride: total size of 1 triangle
+		//	(void*)0					// size of offset from start
+		//);
+		//glDrawArrays(GL_LINES, 0, 3);
+		//
+		//glDeleteBuffers(1, &buffer);
 	}
 }

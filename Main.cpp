@@ -113,10 +113,11 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 	// load obj file, openGL state
 	{
 		// not using paths from dir:: because OBJ_Loader.h does not use wstring, and might not find the file.
-		file.LoadFile("res/box.obj");
+		if( ! objFile.LoadFile("res/box.obj") ) debug::db({ L"Cant find obj file", {DBINFO}, debug::kritical });
+		box = objFile.LoadedMeshes[0];
 		
 		glClearColor(0, 0, 0, 1.0f );
-		set_uniColor(prog::unicolor, glm::vec4(1,0,0,1));
+		set_uniColor(prog::unicolor, glm::vec4(.5,0,0,1));
 	}
 	
 } 
@@ -137,8 +138,12 @@ void Canvas::render(wxPaintEvent& evt)
 	
 	GLuint buffer;
 	glGenBuffers(1, &buffer);
-	std::vector<glm::vec3> data{{-.7, -.7, 0}, {.7,-.7,0}, {.7, .7, 0}};
-	draw::triangle({0,0,0},{-1,0,0},{-1,-1,0}, buffer);
+	
+	// .Vertices[0].Position[0]
+	//draw::testline(objl::Vector3{0,0,0},objl::Vector3{0,0,0});
+	//
+	//std::vector<glm::vec3> data{{-.7, -.7, 0}, {.7,-.7,0}, {.7, .7, 0}};
+	//draw::triangle({0,0,0},{-1,0,0},{-1,-1,0}, buffer);
 	glDeleteBuffers(1, &buffer);
 	
 	GLerror();

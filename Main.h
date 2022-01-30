@@ -1,5 +1,6 @@
 #include "src/gui.h"
-#include "src/openGL.h"
+#include "src/engine.h"
+#define TIMER_ID 125156
 typedef std::wstring WS;
 namespace fs = std::filesystem;
 
@@ -20,17 +21,27 @@ public:
 	wxGLContext* context;
 	objl::Loader objFile;
 	objl::Mesh box;
+	wxSize size;
+	
+	GLuint buffer;
+	GLuint index_buffer;
+	
+	object o;
+	//object box2;
+	
+	wxTimer timer;
+	
 private:
 	void render(wxPaintEvent& evt);
 	void OnResize(wxSizeEvent& event);
-	
+	void OnTimer(wxTimerEvent& event);
 	wxDECLARE_EVENT_TABLE();
 };
 wxBEGIN_EVENT_TABLE(Canvas, wxGLCanvas)
 EVT_PAINT(Canvas::render)
 EVT_SIZE(Canvas::OnResize)
+EVT_TIMER(TIMER_ID, Canvas::OnTimer)
 wxEND_EVENT_TABLE()
-
 
 
 class MyFrame : public wxFrame

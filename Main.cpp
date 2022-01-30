@@ -1,5 +1,6 @@
 #include "Main.h"
-
+#include <math.h>
+float poop = 0;
 
 #ifdef NDEBUG 
 wxIMPLEMENT_APP(MyApp);
@@ -73,8 +74,7 @@ MyFrame::MyFrame()
 }
 
 
-
-Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
+Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame), timer(this, TIMER_ID)
 { 
 	context = new wxGLContext(this); 
 	context->SetCurrent(*this); 
@@ -90,26 +90,6 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 		}
 	}
 	
-	// shaders, programs
-	{
-		shad::vertex = shad::compile(file::vertex, GL_VERTEX_SHADER);
-		shad::unicolorFrag = shad::compile(file::unicolor_fragment, GL_FRAGMENT_SHADER);
-		
-		if( debug::get() ) 
-		{ 
-			#ifdef NDEBUG 
-			debug::showLastError({DBINFO}); 
-			exit(-1);
-			#else
-			debug::showLastError({DBINFO}); 
-			#endif
-		}
-		
-		prog::unicolor = glCreateProgram();
-		prog::link(prog::unicolor, shad::vertex, shad::unicolorFrag);
-		glUseProgram(prog::unicolor);
-	}
-	
 	// load obj file, openGL state
 	{
 		// not using paths from dir:: because OBJ_Loader.h does not use wstring, and might not find the file.
@@ -117,38 +97,60 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame)
 		box = objFile.LoadedMeshes[0];
 		
 		glClearColor(0, 0, 0, 1.0f );
-		set_uniColor(prog::unicolor, glm::vec4(.5,0,0,1));
+		glPolygonMode(GL_FRONT, GL_LINE);
+		glPolygonMode(GL_BACK, GL_LINE);
+	}
+
+	// setup box object
+	{
+		o = object();
+		o.shader(file::vertex, file::unicolor_fragment);
+		o.scale = glm::mat3(.3);
+		o.setMesh(&box.Vertices[0], box.Vertices.size(), &box.Indices[0], box.Indices.size(), 8);
+		auto Size = GetSize(); size = Size;
+		updateResolution(o.program, size.x, size.y);
+		set_uniColor(o.program, &glm::vec4(.5,0,0,1));
+		o.update();
 	}
 	
+	timer.Start(100/6); // 1000 = 1 second
 } 
 void Canvas::OnResize(wxSizeEvent& event)
 {
-	auto size = event.GetSize();
-	if( size.x > size.y) glViewport( size.x/2-size.y/2, 0, size.y, size.y );
-	else glViewport( 0, size.y/2-size.x/2, size.x, size.x );
+	auto Size = event.GetSize(); size = Size;	
+	updateResolution(o.program, size.x, size.y);
 	event.Skip();
+}
+void Canvas::OnTimer(wxTimerEvent& event)
+{
+	o.rotate(0, poop);
+	o.rotate(1, poop);
+	o.rotate(2, poop);
+	o.update();
+	
+	const wxPoint pt = wxGetMousePosition();
+	float mouseX = 2*(float(pt.x - this->GetScreenPosition().x) / size.x) - 1.;
+	float mouseY = 2*(float(pt.y - this->GetScreenPosition().y) / size.y) - 1.;
+	GLint uniform = glGetUniformLocation(o.program, "iMouse");
+	glUniform2f(uniform, mouseX, -mouseY); // raw matrix data in rows
+	
+	poop += .01F;
+	Refresh();
 }
 void Canvas::render(wxPaintEvent& evt)
 {
-	SetCurrent(*context);
-    wxPaintDC(this);
+	// problems might arise because this is commented
+	//SetCurrent(*context);
+    //wxPaintDC(this);     
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glUseProgram(prog::unicolor);
 	
-	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	
-	// .Vertices[0].Position[0]
-	//draw::testline(objl::Vector3{0,0,0},objl::Vector3{0,0,0});
-	//
-	//std::vector<glm::vec3> data{{-.7, -.7, 0}, {.7,-.7,0}, {.7, .7, 0}};
-	//draw::triangle({0,0,0},{-1,0,0},{-1,-1,0}, buffer);
-	glDeleteBuffers(1, &buffer);
-	
+	o.draw();
+
 	GLerror();
 	glFlush();
     SwapBuffers();
 }
+
 
 

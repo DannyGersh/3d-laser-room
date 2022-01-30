@@ -12,8 +12,6 @@
 	#include <iostream>
 	#include <string>
 	#include <filesystem>
-	//#include <sstream>
-	#include <any>
 	
 	#ifndef NDEBUG
 		#if __has_include ("boost/stacktrace.hpp")

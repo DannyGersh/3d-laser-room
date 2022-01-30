@@ -2,10 +2,11 @@
 
 out vec4 color;
 in vec4 fragmentColor;
+in vec4 pos;
 
 uniform vec4 inCOLOR;
+uniform vec2 iResolution;
 
 void main() {
 	color = inCOLOR;
-	//color = vec4(0, 1, 1, 1);
 }

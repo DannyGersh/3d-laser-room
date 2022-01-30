@@ -1,4 +1,4 @@
-#include "pch.h"
+#include <GL/glew.h>
 #include "depend/debug.h"
 typedef std::wstring WS; 
 
@@ -106,26 +106,41 @@ void link(GLuint programID, GLuint vectSHADER, GLuint fragSHADER)
 }
 
 
-void UniformData(GLuint programID, glm::mat4 mat)
+template<typename T> 
+void updateResolution(GLuint program, T x, T y)
+{
+	GLint uniform = glGetUniformLocation(program, "iResolution");
+	glUniform2f(uniform, x, y);
+	glViewport( 0, 0, x, y );
+}
+//GLint uniform = glGetUniformLocation(prog::unicolor, "iResolution");
+//glUniform2f(uniform, size.x, size.y);
+	
+void UniformData(GLuint programID, void* mat)
 {
 	GLint uniform = glGetUniformLocation(programID, "trans");
-	glUniformMatrix4fv(uniform, 1, GL_FALSE, glm::value_ptr(mat));
+	glUniformMatrix3fv(uniform, 1, GL_TRUE, (GLfloat*)mat); // raw matrix data in rows
 }
-void set_uniColor(GLuint programID, glm::vec4 color)
+void set_uniColor(GLuint programID, void* color)
 {
 	GLint uniform = glGetUniformLocation(programID, "inCOLOR");
-	glUniform4fv(uniform, 1, &color[0]);
+	glUniform4fv(uniform, 1, (GLfloat*)color);
 }
 
 
 namespace draw
 {
-	void line(glm::vec3 a, glm::vec3 b)
-	{
-		const glm::vec3 data[] = { a, b };
+	// this functions except anny input,
+	// and convert the underling memory as needed.
+	// make sure the data structures you pass to this functions
+	// hase the required structure to function as intended.
 	
-		GLuint buffer;
-		glGenBuffers(1, &buffer);
+	void line(void* A, void* B, GLuint buffer)
+	{
+		float* a = (float*)A;
+		float* b = (float*)B;
+		float data[] = { a[0], a[1], a[2], b[0], b[1], b[2] };
+		
 		glBindBuffer(GL_ARRAY_BUFFER, buffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
 		
@@ -141,50 +156,44 @@ namespace draw
 			(void*)0					// size of offset from start
 		);
 		glDrawArrays(GL_LINES, 0, 3);
-		
-		glDeleteBuffers(1, &buffer);
 	}
-	void line(glm::vec3 a, glm::vec3 b, GLuint buffer)
+	void lines(void* Data, GLuint buffer)
 	{
-		const glm::vec3 data[] = { a, b };
+		// input: std::vector of anny sort.
+		// structure of the vector:
+		// 3 floats per index of the vector.
+		
+		std::vector<float>* data = (std::vector<float>*)(Data);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(*data).size(), &(*data)[0], GL_STATIC_DRAW);
+		
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*3,            // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(GL_LINE_STRIP, 0, (*data).size()/3);
+	}
+	void triangle(void* A, void* B, void* C, GLuint buffer)
+	{	
+		// input: three variables A,B,C , each of wich is a structure comprised of 3 floats.
 
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
-		
-		glEnableVertexAttribArray(0);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glVertexAttribPointer(
-			0,							// axes shader variables at location 0
-			3,							// number of atrributes
-			GL_FLOAT,					// type
-			GL_FALSE,					// normalized?
-			sizeof(float)*3,            // stride: total size of 1 triangle
-			(void*)0					// size of offset from start
-		);
-		glDrawArrays(GL_LINES, 0, 3);
-	}
-	void lines(std::vector<glm::vec3>& data, GLuint buffer)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*data.size(), &data[0], GL_STATIC_DRAW);
-		
-		glEnableVertexAttribArray(0);
-		
-		glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		glVertexAttribPointer(
-			0,							// axes shader variables at location 0
-			3,							// number of atrributes
-			GL_FLOAT,					// type
-			GL_FALSE,					// normalized?
-			sizeof(float)*3,            // stride: total size of 1 triangle
-			(void*)0					// size of offset from start
-		);
-		glDrawArrays(GL_LINE_STRIP, 0, data.size());
-	}
-	void triangle(glm::vec3 a, glm::vec3 b, glm::vec3 c, GLuint buffer)
-	{
-		const glm::vec3 data[] = { a, b, c };
+		float* a = ((float*)A);
+		float* b = ((float*)B);
+		float* c = ((float*)C);
+		const float data[] = 
+		{ 
+			a[0], a[1], a[2],
+			b[0], b[1], b[2],
+			c[0], c[1], c[2] 
+		};
 		
 		glBindBuffer(GL_ARRAY_BUFFER, buffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*3*3, data, GL_STATIC_DRAW);
@@ -202,42 +211,49 @@ namespace draw
 		);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
-
-
-	//void test(std::shared_ptr<void> a)
-	//{
-	//	auto poop = std::static_pointer_cast<char*>(a);
-	//	std::cout<<(*poop.get())[0]<<(*poop.get())[1]<<(*poop.get())[2]<<(*poop.get())[3]<<'\n';
-	//}
-	//
-	//int main()
-	//{
-	//	char poop[] = {'a','b','c','d'};
-	//	test(std::make_shared<char*>(poop));
-	//}
-	void testline(std::shared_ptr<void> A, std::shared_ptr<void> B)
-	{
-		auto a = std::static_pointer_cast<glm::vec3>(A);
-		//const glm::vec3 data[] = { a, b };
-		//
-		//GLuint buffer;
-		//glGenBuffers(1, &buffer);
-		//glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		//glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
-		//
-		//glEnableVertexAttribArray(0);
-		//
-		//glBindBuffer(GL_ARRAY_BUFFER, buffer);
-		//glVertexAttribPointer(
-		//	0,							// axes shader variables at location 0
-		//	3,							// number of atrributes
-		//	GL_FLOAT,					// type
-		//	GL_FALSE,					// normalized?
-		//	sizeof(float)*3,            // stride: total size of 1 triangle
-		//	(void*)0					// size of offset from start
-		//);
-		//glDrawArrays(GL_LINES, 0, 3);
-		//
-		//glDeleteBuffers(1, &buffer);
+	void triangles(void* Data, GLuint buffer)
+	{			 
+		std::vector<float>* data = (std::vector<float>*)(Data);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(*data).size(), &(*data)[0], GL_STATIC_DRAW);
+		
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*3,            // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		glDrawArrays(GL_TRIANGLES, 0, (*data).size());
+	}
+	void triangles_index(unsigned int indices, GLuint buffer, GLuint index_buffer, unsigned int vertexAttr)
+	{			 
+		glEnableVertexAttribArray(0);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, buffer);
+		glVertexAttribPointer(
+			0,							// axes shader variables at location 0
+			3,							// number of atrributes
+			GL_FLOAT,					// type
+			GL_FALSE,					// normalized?
+			sizeof(float)*vertexAttr,   // stride: total size of 1 triangle
+			(void*)0					// size of offset from start
+		);
+		
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
+		glDrawElements(
+			GL_TRIANGLES,      // mode
+			indices, 		   // count
+			GL_UNSIGNED_INT,   // type
+			(void*)0           // element array buffer offset
+		);
 	}
 }
+
+
+

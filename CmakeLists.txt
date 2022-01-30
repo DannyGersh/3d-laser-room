@@ -1,5 +1,6 @@
 # if you ran into trouble, try seting wxRoot, glewRoot and boostRoot to the root directories of the assosiated libraries.
-# please set them from a different CMakeLists file, and call add_subdirectory on this project directorie.
+# please set them from a different CMakeLists file, and call add_subdirectory on this project directorie,
+# so not to change this file.
 #
 # wxwidgets - wxRoot - REQUIRED 
 # glew - glewRoot - REQUIRED 
@@ -10,8 +11,6 @@
 #
 # for MinGW builds:
 # cmake -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=<Debug/Release ... etk> -B <target dir>
-# for msvc build:
-# cmake -B <target dir> --config <Debug/release ... etk>
 
 
 project(3d-laser-room)
@@ -21,6 +20,10 @@ include_directories(${PROJECT_SOURCE_DIR}) # mingw doesnt pick this up by defaul
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+target_compile_options(${PROJECT_NAME} PUBLIC -g)
+endif()
 
 find_package(OpenGL REQUIRED)
 target_link_libraries(${PROJECT_NAME} opengl32)

@@ -9,4 +9,5 @@ uniform vec2 iResolution;
 
 void main() {
 	color = inCOLOR;
+	//if(gl_FragCoord.z-.5 < 0.) color = vec4(.0,.0,.0,.0);
 }

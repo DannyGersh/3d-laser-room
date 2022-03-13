@@ -1,6 +1,7 @@
 #include "Main.h"
 #include <math.h>
 float poop = 0;
+float poop2 = 0;
 
 #ifdef NDEBUG 
 wxIMPLEMENT_APP(MyApp);
@@ -74,6 +75,7 @@ MyFrame::MyFrame()
 }
 
 
+
 Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame), timer(this, TIMER_ID)
 { 
 	context = new wxGLContext(this); 
@@ -101,56 +103,148 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame), timer(this, TIMER_ID)
 		glPolygonMode(GL_BACK, GL_LINE);
 	}
 
-	// setup box object
+	// setup camera and box object
 	{
-		o = object();
 		o.shader(file::vertex, file::unicolor_fragment);
-		o.scale = glm::mat3(.3);
+		o.scale = glm::mat3(.1);
 		o.setMesh(&box.Vertices[0], box.Vertices.size(), &box.Indices[0], box.Indices.size(), 8);
-		auto Size = GetSize(); size = Size;
-		updateResolution(o.program, size.x, size.y);
+		
+		auto Size = GetSize(); 
+		size.x = Size.x;	
+		size.y = Size.y;
 		set_uniColor(o.program, &glm::vec4(.5,0,0,1));
+		o.move({0,0,0});
 		o.update();
+		
+		d.shader(file::vertex, file::unicolor_fragment);
+		set_uniColor(d.program, &glm::vec4(.5,.5,0,1));
+		d.update();
+	}
+
+	// ubo
+	{
+		GLuint qq[2] = {o.program, d.program};
+		cam.setup(qq, 2, 0);
 	}
 	
 	timer.Start(100/6); // 1000 = 1 second
 } 
 void Canvas::OnResize(wxSizeEvent& event)
 {
-	auto Size = event.GetSize(); size = Size;	
-	updateResolution(o.program, size.x, size.y);
+	auto Size = event.GetSize(); 
+	size.x = Size.x;	
+	size.y = Size.y;
+	cam.updateResolution(Size.x, Size.y);
+	
 	event.Skip();
 }
 void Canvas::OnTimer(wxTimerEvent& event)
 {
-	o.rotate(0, poop);
-	o.rotate(1, poop);
-	o.rotate(2, poop);
+	//cam.move(pos);
+	//cam.rotate(1, poop);
+	float speed = .05;
+	//if (keyStatePos.x == 1) { pos.x += speed; }
+	//else if (keyStatePos.x == -1) { pos.x -= speed; }
+	//else if (keyStatePos.y == 1) { pos.z -= speed; }
+	//else if (keyStatePos.y == -1) { pos.z += speed; }
+	//else if (keyStatePos.z == 1) { poop += speed; }
+	//else if (keyStatePos.z == -1) { poop -= speed; };
+	
+	if (keyStatePos.y == 1) { cam.translate.z -= .01; }
+	if (keyStatePos.y == -1) { cam.translate.z += .01; }
+	if (keyStatePos.z == 1) { poop += speed; cam.rotate(1, poop); }
+	if (keyStatePos.z == -1) { poop -= speed; cam.rotate(1, poop); };
+	
+	if(keyState[0] == 1) { poop2 += speed; cam.rotate(0, poop2); }
+	if(keyState[1] == 1) { poop2 -= speed; cam.rotate(0, poop2); }
+		
+	//cam.translate = glm::vec3({0,0,-1});
+	//o.rotate(0, poop);
+	//o.rotate(1, poop);
+	//o.rotate(2, poop);
+	cam.update();
 	o.update();
 	
 	const wxPoint pt = wxGetMousePosition();
-	float mouseX = 2*(float(pt.x - this->GetScreenPosition().x) / size.x) - 1.;
+	float mouseX = 1. - 2*(float(pt.x - this->GetScreenPosition().x) / size.x);
 	float mouseY = 2*(float(pt.y - this->GetScreenPosition().y) / size.y) - 1.;
-	GLint uniform = glGetUniformLocation(o.program, "iMouse");
-	glUniform2f(uniform, mouseX, -mouseY); // raw matrix data in rows
+	cam.updateMouse(mouseX, mouseY);
 	
-	poop += .01F;
+	//poop += .01F;
+	GLerror(DBINFO);
 	Refresh();
 }
 void Canvas::render(wxPaintEvent& evt)
 {
 	// problems might arise because this is commented
+	// DO NOT DELETE THIS COMMENTED SECTION
 	//SetCurrent(*context);
     //wxPaintDC(this);     
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+	glUseProgram(o.program);
 	o.draw();
-
-	GLerror();
+	o.move({.5,.5,.5});
+	o.update();
+	o.draw();
+	o.move({.3,.1,-.5});
+	o.update();
+	o.draw();
+	o.move({-.6,.4,-.8});
+	o.update();
+	o.draw();
+	o.move({1.,-.4,.3});
+	o.update();
+	o.draw();
+	o.move({.2,.2,.6});
+	o.update();
+	o.draw();
+	//glUniformMatrix3fv(o.Utrans, 1, GL_TRUE, &nullMat3[0][0]);
+	//glUniform3fv(o.Uloc, 1, &nullVec3.x);
+	
+	glUseProgram(d.program);
+	glm::vec3 d1(0, 0, 0); glm::vec3 d2(0,0,0.5);
+	draw::line(&d1, &d2);
+	
+	GLerror(DBINFO);
 	glFlush();
     SwapBuffers();
 }
 
-
+void Canvas::OnKeyDown(wxKeyEvent& event)
+{
+	int key = event.GetKeyCode();
+	switch(key)
+	{
+		case 65: { keyStatePos.x = 1; break; }
+		case 68: { keyStatePos.x = -1; break; }
+		case 87: { keyStatePos.y = 1; break; }
+		case 83: { keyStatePos.y = -1; break; }
+		case 81: { keyStatePos.z = 1; break; } // q
+		case 69: { keyStatePos.z = -1; break; } // e
+		
+		case 49: { keyState[0] = 1; break; } // 1
+		case 50: { keyState[1] = 1; break; } // 2
+	}
+	std::cout<<key<<'\n';
+    event.Skip();
+}
+void Canvas::OnKeyUp(wxKeyEvent& event)
+{
+	int key = event.GetKeyCode();
+	switch(key)
+	{
+		case 65: { keyStatePos.x = 0; break; }
+		case 68: { keyStatePos.x = 0; break; }
+		case 87: { keyStatePos.y = 0; break; }
+		case 83: { keyStatePos.y = 0; break; }
+		case 81: { keyStatePos.z = 0; break; } // q
+		case 69: { keyStatePos.z = 0; break; } // e
+		
+		case 49: { keyState[0] = 0; break; } // 1
+		case 50: { keyState[1] = 0; break; } // 2
+	}
+	event.Skip();
+}
 

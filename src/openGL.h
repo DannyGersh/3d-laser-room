@@ -2,7 +2,7 @@
 #include "depend/debug.h"
 typedef std::wstring WS; 
 
-void GLerror()
+void GLerror(debug::Info i)
 {
 	GLenum err = glGetError();
 
@@ -13,17 +13,17 @@ void GLerror()
 		break;
 
 	case GL_INVALID_ENUM:
-		debug::db({ L"openGL error: GLenum argument out of range", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: GLenum argument out of range", i, debug::warning });
 	case GL_INVALID_VALUE:
-		debug::db({ L"openGL error: Numeric argument out of range.", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Numeric argument out of range.", i, debug::warning });
 	case GL_INVALID_OPERATION:
-		debug::db({ L"openGL error: Operation illegal in current state.", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Operation illegal in current state.", i, debug::warning });
 	case GL_STACK_OVERFLOW:
-		debug::db({ L"openGL error: Function would cause a stack overflow.", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Function would cause a stack overflow.", i, debug::warning });
 	case GL_STACK_UNDERFLOW:
-		debug::db({ L"openGL error: Function would cause a stack underflow.", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Function would cause a stack underflow.", i, debug::warning });
 	case GL_OUT_OF_MEMORY:
-		debug::db({ L"openGL error: Not enough memory left to execute function.", {DBINFO}, debug::warning });
+		debug::db({ L"openGL error: Not enough memory left to execute function.", i, debug::warning });
 	}
 
 }
@@ -113,20 +113,30 @@ void updateResolution(GLuint program, T x, T y)
 	glUniform2f(uniform, x, y);
 	glViewport( 0, 0, x, y );
 }
-//GLint uniform = glGetUniformLocation(prog::unicolor, "iResolution");
-//glUniform2f(uniform, size.x, size.y);
 	
-void UniformData(GLuint programID, void* mat)
-{
-	GLint uniform = glGetUniformLocation(programID, "trans");
-	glUniformMatrix3fv(uniform, 1, GL_TRUE, (GLfloat*)mat); // raw matrix data in rows
-}
 void set_uniColor(GLuint programID, void* color)
 {
 	GLint uniform = glGetUniformLocation(programID, "inCOLOR");
 	glUniform4fv(uniform, 1, (GLfloat*)color);
 }
 
+float dummyMat4[16];
+void M3M4_toUbo(void* mat3)
+{
+	// this functions sends a mat3 uniform to a ubo,
+	// ubo's onley except mat4 (sortoff ...)
+	// so the data in the matrix needs to be adjusted.
+	//
+	// this complexity is redundent.
+	// I did it like this for practice,
+	// also it should be slightly faster than iterating 16 elements.
+	
+	float* pointer2 = (float*)(mat3);
+	memcpy(dummyMat4, pointer2, 36); // 4*9 - 9 floats is the entire matrix being copied
+	memcpy(dummyMat4+4, pointer2+3, 24); // 4*6 - 6 floats being copied
+	memcpy(dummyMat4+8, pointer2+6, 12); // 3*3 - 3 floats being copied
+	glBufferSubData(GL_UNIFORM_BUFFER, 4*(4+4+4), 64, dummyMat4); // 16=4*4, 64=4*16
+}	
 
 namespace draw
 {
@@ -135,12 +145,14 @@ namespace draw
 	// make sure the data structures you pass to this functions
 	// hase the required structure to function as intended.
 	
-	void line(void* A, void* B, GLuint buffer)
+	void line(void* A, void* B)
 	{
 		float* a = (float*)A;
 		float* b = (float*)B;
 		float data[] = { a[0], a[1], a[2], b[0], b[1], b[2] };
 		
+		GLuint buffer;
+		glGenBuffers(1, &buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, buffer);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(float)*(3+3), data, GL_STATIC_DRAW);
 		
@@ -156,6 +168,8 @@ namespace draw
 			(void*)0					// size of offset from start
 		);
 		glDrawArrays(GL_LINES, 0, 3);
+		
+		glDeleteBuffers(1, &buffer);
 	}
 	void lines(void* Data, GLuint buffer)
 	{
@@ -257,3 +271,5 @@ namespace draw
 
 
 
+glm::mat3 nullMat3 = glm::mat3(1);
+glm::vec3 nullVec3 = glm::vec3(0,0,0);

@@ -34,6 +34,7 @@ namespace debug
 		}
 	};
 	Data nulld{L"", {0,"",""}, 0};
+	Data last = nulld;
 	
 	void(*db)(Data) = [](Data d) { std::wcout<<d.msg<<"\n"; };
 	
@@ -42,24 +43,20 @@ namespace debug
 	const int message = 3;
 	
 	std::vector<Data> raised;
-	bool empty() { return !raised.size(); };
 	void raise(Data d) { raised.push_back(d); }
 
-	Data last = nulld;
-	
-	bool get()
-	{ 
-		if( !empty() ) 
-		{ 
-			last = raised.back(); 
-			raised.pop_back(); 
-			return true; 
-		}
-		else return false;
-	};
 	void showLastError(Info i)
 	{
 		db({ last.msg , i, last.level });
+	}
+	void getAll(Info i)
+	{
+		while( raised.size() )
+		{
+			auto a = raised.back();
+			db({ a.msg , i, a.level });
+			raised.pop_back(); 
+		}
 	}
 };
 

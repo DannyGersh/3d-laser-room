@@ -7,3 +7,5 @@ https://www.youtube.com/watch?v=T16XwPSwZ4A
 
 grab a copy of the software:
 https://github.com/DannyGersh/3d-laser-room/releases/download/1.0/3d-laser-room-windows-v1.0.rar
+
+<image src="https://github.com/DannyGersh/3d-laser-room/blob/master/testImage.png">

@@ -68,15 +68,13 @@ struct Camera
 			}
 			default: 
 			{
-				debug::db({ L"engine error in rotate(): invalid axis parameter.", {DBINFO}, debug::warning });
+				debug::db({ L"engine error in Camera::rotate(): invalid axis parameter.", {DBINFO}, debug::warning });
 			}
-		}
-		
-		//direction = rotateX*rotateY*rotateZ * direction;
+		}	
 	}
 	void update()
 	{
-		trans = rotateY * rotateX * rotateZ;
+		trans = rotateX * rotateY * rotateZ;
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, 4*4, &translate[0]);
 		M3M4_toUbo(&trans[0]);
 	}

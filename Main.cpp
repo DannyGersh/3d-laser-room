@@ -106,14 +106,13 @@ Canvas::Canvas(wxFrame* frame):  wxGLCanvas(frame), timer(this, TIMER_ID)
 	// setup camera and box object
 	{
 		o.shader(file::vertex, file::unicolor_fragment);
-		o.scale = glm::mat3(.1);
+		o.scale = glm::mat3(.5);
 		o.setMesh(&box.Vertices[0], box.Vertices.size(), &box.Indices[0], box.Indices.size(), 8);
 		
 		auto Size = GetSize(); 
 		size.x = Size.x;	
 		size.y = Size.y;
 		set_uniColor(o.program, &glm::vec4(.5,0,0,1));
-		o.move({0,0,0});
 		o.update();
 		
 		d.shader(file::vertex, file::unicolor_fragment);
@@ -140,28 +139,19 @@ void Canvas::OnResize(wxSizeEvent& event)
 }
 void Canvas::OnTimer(wxTimerEvent& event)
 {
-	//cam.move(pos);
-	//cam.rotate(1, poop);
 	float speed = .05;
-	//if (keyStatePos.x == 1) { pos.x += speed; }
-	//else if (keyStatePos.x == -1) { pos.x -= speed; }
-	//else if (keyStatePos.y == 1) { pos.z -= speed; }
-	//else if (keyStatePos.y == -1) { pos.z += speed; }
-	//else if (keyStatePos.z == 1) { poop += speed; }
-	//else if (keyStatePos.z == -1) { poop -= speed; };
-	
+
 	if (keyStatePos.y == 1) { cam.translate.z -= .01; }
 	if (keyStatePos.y == -1) { cam.translate.z += .01; }
-	if (keyStatePos.z == 1) { poop += speed; cam.rotate(1, poop); }
-	if (keyStatePos.z == -1) { poop -= speed; cam.rotate(1, poop); };
 	
-	if(keyState[0] == 1) { poop2 += speed; cam.rotate(0, poop2); }
-	if(keyState[1] == 1) { poop2 -= speed; cam.rotate(0, poop2); }
-		
-	//cam.translate = glm::vec3({0,0,-1});
-	//o.rotate(0, poop);
-	//o.rotate(1, poop);
-	//o.rotate(2, poop);
+	if (keyStatePos.z == 1) { poop += speed; }
+	if (keyStatePos.z == -1) { poop -= speed; };
+	cam.rotate(1, poop);
+	
+	if(keyState[0] == 1) { poop2 += speed; }
+	if(keyState[1] == 1) { poop2 -= speed; }
+	cam.rotate(0, poop2);
+
 	cam.update();
 	o.update();
 	
@@ -185,23 +175,6 @@ void Canvas::render(wxPaintEvent& evt)
 	
 	glUseProgram(o.program);
 	o.draw();
-	o.move({.5,.5,.5});
-	o.update();
-	o.draw();
-	o.move({.3,.1,-.5});
-	o.update();
-	o.draw();
-	o.move({-.6,.4,-.8});
-	o.update();
-	o.draw();
-	o.move({1.,-.4,.3});
-	o.update();
-	o.draw();
-	o.move({.2,.2,.6});
-	o.update();
-	o.draw();
-	//glUniformMatrix3fv(o.Utrans, 1, GL_TRUE, &nullMat3[0][0]);
-	//glUniform3fv(o.Uloc, 1, &nullVec3.x);
 	
 	glUseProgram(d.program);
 	glm::vec3 d1(0, 0, 0); glm::vec3 d2(0,0,0.5);
